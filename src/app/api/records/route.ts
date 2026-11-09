@@ -20,10 +20,10 @@ export async function GET(req: NextRequest) {
     if (districtId) where.districtId = districtId
     if (q) {
       where.OR = [
-        { name: { contains: q } },
-        { constituencyName: { contains: q } },
-        { portfolio: { contains: q } },
-        { party: { contains: q } },
+        { name: { contains: q, mode: 'insensitive' } },
+        { constituencyName: { contains: q, mode: 'insensitive' } },
+        { portfolio: { contains: q, mode: 'insensitive' } },
+        { party: { contains: q, mode: 'insensitive' } },
       ]
     }
 

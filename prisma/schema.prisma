@@ -1,14 +1,19 @@
 // Civic Lenz — Government transparency & accountability platform (prototype)
-// SQLite + Prisma. Political records carry verification metadata by design
+// PostgreSQL (Supabase) + Prisma. Political records carry verification metadata by design
 // (official source, effective date, last-verified, lifecycle status).
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  // "native" for local dev / the build image, "rhel-openssl-3.0.x" for Netlify Functions.
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  // Supabase transaction pooler (port 6543, with ?pgbouncer=true) for serverless runtime queries
+  url       = env("DATABASE_URL")
+  // Supabase direct / session connection (port 5432) used for schema pushes
+  directUrl = env("DIRECT_URL")
 }
 
 // ─────────────────────────── Geography / jurisdiction ───────────────────────────
