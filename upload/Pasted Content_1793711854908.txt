@@ -1,0 +1,1541 @@
+# CIVIC LENZ
+# MASTER PROMPT FOR COMPLETE AUTONOMOUS FULL-STACK GOVERNMENT PLATFORM DEVELOPMENT
+
+## ROLE AND RESPONSIBILITY
+
+Act as a Principal Software Architect, Senior Full-Stack Developer, Government Technology Consultant, UI/UX Designer, Database Architect, Cybersecurity Engineer, GIS Specialist, QA Engineer and DevOps Engineer.
+
+Your responsibility is to build a complete, secure, professional, bilingual, production-oriented full-stack application called CIVIC LENZ.
+
+You must implement the application inside the existing project workspace using your available coding tools, terminal, file system, browser and testing capabilities.
+
+I do not want only a proposed architecture, a UI mockup, Swagger documentation or isolated code snippets.
+
+I want the actual working application.
+
+You must inspect the existing project, preserve working code, develop missing functionality, integrate all modules, test the system, fix errors and prepare the complete application for government evaluation.
+
+Do not repeatedly ask me for permission between normal development stages.
+
+If a genuine external dependency, credential, government authorisation or infrastructure approval is required, complete all possible work first and clearly identify the remaining dependency.
+
+---
+
+# 1. OFFICIAL PROJECT IDENTITY
+
+Project Name: CIVIC LENZ
+
+Tagline:
+"See the Promise. Track the Progress. Verify the Reality."
+
+Team Name: Froast & Flame
+
+Team Members:
+- Jaiyanth B
+- Mohammed Shafiq AS
+
+Department:
+B.Tech – Computer Science and Business Systems
+
+Institution:
+V.S.B Engineering College, Karur
+
+Geographical Focus:
+Tamil Nadu, India, with India-wide political and administrative information.
+
+Application Type:
+Bilingual Government Public Information, Accountability and Service Monitoring Platform.
+
+Languages:
+- English
+- Tamil
+
+Design Theme:
+Formal, professional, clean LIGHT THEME.
+
+The application must be suitable for presentation to the Government of Tamil Nadu.
+
+Do not use an unofficial government emblem, seal or branding that implies government ownership or approval. The platform is a proposed government handover project until formally accepted.
+
+---
+
+# 2. PROJECT VISION
+
+CIVIC LENZ is a unified digital platform connecting:
+
+- Citizens.
+- Government departments.
+- Chief Ministers and state-level political leadership information.
+- Ministers and their departmental portfolios.
+- Members of Parliament.
+- Members of Legislative Assemblies.
+- Local representatives.
+- Public project records.
+- Government announcements.
+- Government schemes.
+- Public financial information.
+
+The application should help citizens understand:
+
+1. Who governs India and its states.
+2. Who represents their parliamentary constituency.
+3. Who represents their Assembly constituency (தொகுதி).
+4. Which ministers hold which government departments.
+5. What the government has announced.
+6. What projects have been approved and implemented.
+7. How public funds are allocated and spent.
+8. Whether public development work is progressing.
+9. Whether completed projects match ground-level conditions.
+10. Whether departments respond to citizen complaints.
+11. Which government schemes citizens can access.
+12. When government holidays, programmes and public activities take place.
+
+The platform must be politically neutral, evidence-based, transparent and secure.
+
+---
+
+# 3. FIRST TASK: INSPECT THE EXISTING PROJECT
+
+Before implementation:
+
+1. Inspect the entire existing project workspace.
+2. Identify the current backend framework.
+3. Identify the current frontend framework, if present.
+4. Identify the database and existing tables.
+5. Inspect all existing API endpoints.
+6. Inspect authentication and role permissions.
+7. Inspect all existing source files.
+8. Identify working and incomplete modules.
+9. Identify configuration and dependency problems.
+10. Identify database migration status.
+11. Check the currently running backend.
+
+IMPORTANT:
+
+- Preserve the existing working backend.
+- Do not delete the existing project.
+- Do not create duplicate backends.
+- Do not regenerate functioning modules unnecessarily.
+- Do not invent API functionality.
+- Reuse existing compatible code.
+- Build missing features around the existing architecture.
+- Take a backup before making major structural changes.
+
+After inspection, prepare an internal implementation plan and immediately start development.
+
+Do not stop at the inspection report.
+
+---
+
+# 4. COMPLETE APPLICATION FEATURE LIST
+
+The application must contain the following 17 major features.
+
+## FEATURE 1 – PUBLIC COMPLAINT MANAGEMENT
+
+Create a complete public grievance reporting and tracking system.
+
+Citizen capabilities:
+
+- Register complaints.
+- Select complaint categories.
+- Describe the issue.
+- Select district and locality.
+- Upload photographs and supporting documents.
+- Generate a unique Complaint ID.
+- View complaint history.
+- Track department responses.
+- Submit feedback.
+- Request reopening where permitted.
+- Escalate unresolved complaints.
+
+Complaint categories:
+
+- Roads and highways.
+- Drainage and sewage.
+- Drinking water.
+- Electricity.
+- Streetlights.
+- Government hospitals.
+- Public transport.
+- Ration services.
+- Sanitation.
+- Waste management.
+- Other public services.
+
+Complaint workflow:
+
+Submitted → Acknowledged → Assigned → Under Review → Action in Progress → Resolved → Closed.
+
+Additional statuses:
+Reopened and Rejected with Explanation.
+
+Department officials must be able to acknowledge, assign, respond to and update authorised complaints.
+
+Representatives must be able to monitor and forward or escalate complaints.
+
+Maintain a permanent complaint status history.
+
+## FEATURE 2 – GOVERNMENT PROMISE AND PROJECT REGISTRY
+
+Create a searchable government project database.
+
+Each project should contain:
+
+- Project title.
+- Description.
+- Project category.
+- Responsible department.
+- District.
+- Constituency.
+- Taluk.
+- Locality.
+- Announcement date.
+- Administrative approval date.
+- Funding approval date.
+- Estimated cost.
+- Approved budget.
+- Work commencement date.
+- Expected completion date.
+- Actual completion date.
+- Milestones.
+- Progress updates.
+- Current status.
+- Supporting documents.
+- Official source references.
+
+Project statuses:
+
+- Announced.
+- Under Approval.
+- Approved.
+- Funded.
+- Not Yet Started.
+- Ongoing.
+- Delayed.
+- Completed.
+- Suspended.
+- Cancelled.
+
+## FEATURE 3 – CITIZEN PROJECT VERIFICATION
+
+Allow citizens to submit ground-level evidence regarding government projects.
+
+Features:
+
+- Select an existing project.
+- Upload photographs.
+- Submit observations.
+- Capture submission date.
+- Capture location with permission.
+- View verification status.
+- Review official responses.
+- Submit counter-evidence.
+- Request an inspection.
+- View inspection results.
+- Track disputed information.
+
+Verification statuses:
+
+- Submitted.
+- Awaiting Review.
+- Under Verification.
+- Additional Information Required.
+- Verified.
+- Disputed.
+- Rejected with Explanation.
+
+Citizen reports must never automatically become officially verified facts.
+
+## FEATURE 4 – LOCALITY-WISE DEVELOPMENT DASHBOARD
+
+Provide a geographical project dashboard.
+
+Administrative hierarchy:
+
+India → Tamil Nadu → District → Parliamentary Constituency → Assembly Constituency → Taluk → Corporation / Municipality → Panchayat → Ward / Village.
+
+Features:
+
+- District selection.
+- Assembly constituency selection.
+- Parliamentary constituency selection.
+- Taluk selection.
+- Ward and village selection.
+- Project search.
+- Project category filters.
+- Interactive maps.
+- Project counts.
+- Completed projects.
+- Ongoing projects.
+- Delayed projects.
+- Budget summaries.
+- Locality comparisons.
+
+Use validated geographical boundaries and identifiers.
+
+Do not generate inaccurate constituency boundaries.
+
+## FEATURE 5 – GOVERNMENT PROJECT HISTORY ACROSS GOVERNMENT CHANGES
+
+Maintain a permanent historical record of government projects.
+
+Record:
+
+- Project announcement.
+- Government tenure at announcement.
+- Administrative approval.
+- Financial approval.
+- Work commencement.
+- Change of government.
+- Continuation by subsequent government.
+- Scope modifications.
+- Budget revisions.
+- Schedule revisions.
+- Completion.
+- Inspection.
+
+Each event must include:
+
+- Event type.
+- Date.
+- Description.
+- Department.
+- Relevant government tenure.
+- Source document.
+- Recorded-by information.
+- Verification status.
+
+Historical events must never be overwritten when governments change.
+
+Corrections must be added as new auditable events.
+
+Maintain political neutrality.
+
+## FEATURE 6 – GOVERNMENT SCHEME ASSISTANCE
+
+Build a central and Tamil Nadu government scheme directory.
+
+Include:
+
+- Scheme name.
+- Description.
+- Responsible department.
+- Eligibility.
+- Benefits.
+- Required documents.
+- Application instructions.
+- Official application link.
+- Deadline, where applicable.
+- Department contact information.
+- Last verification date.
+
+Include schemes such as:
+
+- PM-KISAN.
+- Magalir Urimai Thogai.
+- Other verified state and central schemes.
+
+Do not claim to approve applications or access private application status without authorised integration.
+
+## FEATURE 7 – DEPARTMENT-WISE FUND TRANSPARENCY
+
+Display public financial information.
+
+Features:
+
+- Department-wise allocation.
+- Project-wise allocation.
+- Financial year.
+- Budget approval.
+- Funds released.
+- Actual expenditure.
+- Allocated but unreleased balance.
+- Unspent released balance.
+- Financial comparison.
+- Charts.
+- Supporting documents.
+- Source information.
+- Last-updated date.
+
+Definitions:
+
+Allocated but unreleased balance = Allocation minus funds released.
+
+Unspent released balance = Funds released minus expenditure.
+
+Do not present accounting differences as evidence of corruption.
+
+Clearly distinguish published financial information from demonstration data.
+
+---
+
+# 5. GOVERNMENT CALENDAR
+
+## FEATURE 8 – INDIA AND TAMIL NADU GOVERNMENT CALENDAR
+
+Create a dedicated interactive government calendar.
+
+The calendar should display:
+
+### Government holidays
+- Tamil Nadu public holidays.
+- National holidays.
+- Government office holidays.
+- Optional holidays where officially notified.
+
+### Government activities
+- Official government programmes.
+- Public awareness campaigns.
+- Government-organised events.
+- Department-specific activities.
+- Public meetings.
+- Scheme application opening dates.
+- Scheme application deadlines.
+- Important public notices.
+
+### Calendar functionality
+
+- Monthly calendar.
+- Weekly calendar.
+- Daily calendar.
+- Upcoming events.
+- Search.
+- Department filter.
+- District filter.
+- Event category filter.
+- Event detail page.
+- Add to personal calendar where supported.
+
+Each event must contain:
+
+- Event title.
+- Event date and time.
+- Category.
+- Publishing authority.
+- Department.
+- Location.
+- Description.
+- Official notification or source.
+- Last-updated date.
+
+Distinguish national holidays, state holidays, optional holidays and department-specific activities.
+
+Do not create fictional government events.
+
+---
+
+# 6. GOVERNMENT ANNOUNCEMENTS
+
+## FEATURE 9 – OFFICIAL GOVERNMENT ANNOUNCEMENTS
+
+Create a dedicated announcement portal.
+
+Categories:
+
+1. New government schemes.
+2. Existing scheme updates.
+3. Public welfare announcements.
+4. Infrastructure announcements.
+5. Education announcements.
+6. Healthcare announcements.
+7. Agriculture announcements.
+8. Employment and recruitment announcements.
+9. Government orders.
+10. Policy updates.
+11. Public notices.
+12. Important deadlines.
+
+Each announcement should include:
+
+- Title.
+- Description.
+- Publishing authority.
+- Department.
+- Publication date.
+- Effective date.
+- Eligibility where relevant.
+- Application deadline.
+- Supporting notification.
+- Official source URL.
+- Related scheme or project.
+- Language.
+- Last-updated date.
+
+Functionality:
+
+- Latest announcements.
+- Search.
+- Date filters.
+- Department filters.
+- Category filters.
+- Tamil and English versions.
+- Save announcements.
+- Share announcements.
+- Related scheme navigation.
+- Related project navigation.
+
+Only verified official information or authorised administrative entries may appear as official government announcements.
+
+Never treat social media rumours as government announcements.
+
+---
+
+# 7. INTERACTIVE INDIA POLITICAL MAP
+
+## FEATURE 10 – INDIA GOVERNMENT AND POLITICAL LEADERSHIP MAP
+
+This is a major feature.
+
+Create an interactive political and administrative map of India.
+
+The map must display all states and Union Territories.
+
+When a user selects a state or Union Territory, show its current government and leadership information.
+
+### India map information
+
+Display:
+
+- State and Union Territory names.
+- Chief Minister, where applicable.
+- Governor or Lieutenant Governor, as applicable.
+- Council of Ministers.
+- Ministerial portfolios.
+- Ruling government information.
+- Official state government website.
+- State legislature information.
+- Parliamentary representation.
+- Current government tenure information where reliably sourced.
+
+For Union Territories, distinguish:
+- Administrator or Lieutenant Governor.
+- Chief Minister where the UT has an elected government.
+- Elected legislative structure where applicable.
+
+Do not display a Chief Minister for an administration that does not have one.
+
+### Minister information
+
+For each minister:
+
+- Full name.
+- Official designation.
+- Department or portfolio.
+- Government level.
+- State.
+- Official profile source.
+- Effective-from date.
+- Last verified date.
+
+Allow filtering by department and state.
+
+### India parliamentary representation
+
+Display:
+
+- Lok Sabha constituencies.
+- Elected Lok Sabha MPs.
+- Rajya Sabha representation separately.
+- Constituency names.
+- Member names.
+- Political party, when officially recorded.
+- Term information.
+- Official parliamentary profile.
+
+Do not mix Lok Sabha and Rajya Sabha members into one constituency list.
+
+### Important accuracy requirement
+
+All political leadership information changes over time.
+
+Use official sources such as:
+
+- Government of India portals.
+- State government portals.
+- President of India and Governor office sources.
+- Parliament of India.
+- Lok Sabha official member directory.
+- Rajya Sabha official member directory.
+- Election Commission of India.
+- Official state legislative assembly records.
+
+Display:
+
+- Source.
+- Effective date.
+- Last verified date.
+- Data status.
+
+Never invent political officeholders or ministerial portfolios.
+
+If reliable data cannot be obtained, display "Information unavailable" rather than guessing.
+
+---
+
+# 8. INTERACTIVE TAMIL NADU POLITICAL MAP
+
+## FEATURE 11 – TAMIL NADU GOVERNMENT AND CONSTITUENCY MAP
+
+This is one of the most important Civic Lenz features.
+
+Create a detailed interactive Tamil Nadu map.
+
+The map must support:
+
+- District boundaries.
+- Parliamentary constituencies.
+- Assembly constituencies.
+- Administrative regions.
+- District selection.
+- Constituency search.
+- Map-based selection.
+- Leader information.
+- Department information.
+
+Use the Tamil term:
+
+தொகுதி (Thogudhi).
+
+### A. Tamil Nadu Chief Minister
+
+Display:
+
+- Chief Minister's full name.
+- Official designation.
+- Government tenure.
+- Official photograph where authorised.
+- Official government profile.
+- Last verified date.
+
+### B. Tamil Nadu Council of Ministers
+
+Display:
+
+- Minister name.
+- Department.
+- Portfolio.
+- Official designation.
+- Official profile.
+- Appointment/effective date.
+- Last verified date.
+
+A minister may hold more than one portfolio.
+
+Represent every portfolio correctly without duplicate or conflicting records.
+
+### C. Tamil Nadu Assembly Constituency Map
+
+Display all 234 Assembly constituencies.
+
+When a citizen clicks a constituency, show:
+
+- Constituency name.
+- Constituency number.
+- District.
+- Current MLA.
+- MLA photograph where permitted.
+- Political party, where officially recorded.
+- Election year.
+- Election result reference.
+- Official Assembly profile.
+- Constituency information.
+- Relevant local development projects.
+- Public complaints.
+- Project history.
+
+Allow searches in both English and Tamil.
+
+Example search:
+
+- Karur.
+- கரூர்.
+- A constituency name.
+- A constituency number.
+
+Do not hardcode sample politicians as current elected representatives.
+
+### D. Tamil Nadu Parliamentary Constituency Map
+
+Display all 39 Lok Sabha constituencies of Tamil Nadu.
+
+When selected, show:
+
+- Parliamentary constituency name.
+- Elected MP.
+- Political party.
+- Election year.
+- Official parliamentary profile.
+- Relevant district coverage.
+- Official election source.
+
+### E. Rajya Sabha Representation
+
+Display Tamil Nadu's 18 Rajya Sabha seats separately.
+
+Show:
+
+- Current members.
+- Political party where officially recorded.
+- Term start.
+- Term end.
+- Official profile.
+- Vacancy status where applicable.
+
+Important:
+Tamil Nadu has 39 Lok Sabha seats and 18 Rajya Sabha seats. Present these separately and do not describe the combined total as 57 Lok Sabha MPs.
+
+### F. Department-to-Minister Directory
+
+Allow users to search:
+
+- Health.
+- Education.
+- Finance.
+- Agriculture.
+- Transport.
+- Public Works.
+- Municipal Administration.
+- Rural Development.
+- Electricity.
+- Water Resources.
+- Other departments.
+
+For each department, display:
+
+- Department name.
+- Minister responsible.
+- Secretary or administrative leadership where publicly and officially documented.
+- Department website.
+- Official contact information.
+- Department responsibilities.
+- Related schemes.
+- Related projects.
+- Complaint submission route.
+
+Clearly distinguish political ministerial responsibility from administrative civil-service responsibility.
+
+### G. Historical political information
+
+Where reliable official records are available, maintain previous officeholders and ministerial portfolio changes.
+
+Use dated records instead of overwriting current information.
+
+---
+
+# 9. GOVERNMENT DEPARTMENT AND SERVICE DIRECTORY
+
+## FEATURE 12 – DEPARTMENT DIRECTORY
+
+Help citizens identify the correct department for their problems.
+
+Display:
+
+- Department name.
+- Services.
+- Responsibilities.
+- Official website.
+- Office address.
+- Official contact numbers.
+- Office hours where published.
+- District-level offices where verified.
+- Complaint route.
+- Relevant minister.
+- Relevant schemes.
+
+Provide search in English and Tamil.
+
+Do not invent contact numbers or personal contact details.
+
+---
+
+# 10. SMART COMPLAINT ROUTING AND ESCALATION
+
+## FEATURE 13 – SMART COMPLAINT ROUTING
+
+Implement:
+
+- Complaint category identification.
+- Department recommendation.
+- Location-based routing.
+- Authorised assignment.
+- Acknowledgement tracking.
+- Response deadlines based on approved rules.
+- Overdue notifications.
+- Escalation workflow.
+- Representative forwarding.
+- Department response history.
+
+Automated routing must be configurable by authorised administrators.
+
+Do not allow representatives to alter official complaint findings.
+
+---
+
+# 11. NOTIFICATIONS AND ALERTS
+
+## FEATURE 14 – CITIZEN NOTIFICATION SYSTEM
+
+Provide notifications for:
+
+- Complaint submission.
+- Complaint acknowledgement.
+- Complaint assignment.
+- Status changes.
+- Department responses.
+- Escalations.
+- Project updates.
+- New government announcements.
+- Scheme updates.
+- Application deadlines.
+- Government holidays.
+- Public activities.
+- Locality-specific development updates.
+
+Support in-app notifications.
+
+Email and SMS integrations may be implemented through approved providers.
+
+Allow citizens to control notification preferences.
+
+Do not send unsolicited or excessive messages.
+
+---
+
+# 12. PUBLIC DATA AND REPORTS
+
+## FEATURE 15 – PUBLIC DATA PORTAL
+
+Provide public information and reports.
+
+Reports:
+
+- District-wise projects.
+- Constituency-wise projects.
+- Department-wise projects.
+- Delayed projects.
+- Completed projects.
+- Complaint statistics.
+- Department response statistics.
+- Fund allocation summaries.
+- Government scheme information.
+- Public announcement archives.
+- Historical project timelines.
+
+Support PDF and CSV downloads where appropriate.
+
+Use aggregated and non-confidential data.
+
+Never expose private complaint attachments, personal phone numbers or sensitive citizen details through public reports.
+
+---
+
+# 13. CITIZEN FEEDBACK AND PUBLIC SATISFACTION
+
+## FEATURE 16 – CITIZEN FEEDBACK
+
+After complaint resolution, allow citizens to provide feedback.
+
+Questions:
+
+- Was the problem resolved?
+- Was the department response satisfactory?
+- Was the work completed properly?
+- Is further action required?
+
+Features:
+
+- Feedback submission.
+- Satisfaction ratings.
+- Comments.
+- Reopen request.
+- Aggregated reports.
+- Department-level feedback statistics.
+
+Apply moderation and abuse protection.
+
+Feedback is citizen opinion and must not be presented as an independently verified departmental performance finding.
+
+---
+
+# 14. ACCESSIBILITY AND ASSISTED CITIZEN SERVICES
+
+## FEATURE 17 – ACCESSIBILITY AND INCLUSIVE DESIGN
+
+Build for all citizens, including elderly users and people with disabilities.
+
+Requirements:
+
+- English and Tamil.
+- Simple language.
+- Large text option.
+- High-contrast mode.
+- Keyboard accessibility.
+- Screen reader support.
+- Accessible form labels.
+- Clear error messages.
+- Mobile responsiveness.
+- Low-bandwidth optimisation.
+- Simple navigation.
+- Clear complaint instructions.
+- Accessible maps with a searchable list alternative.
+
+Consider future integration with authorised government service centres for assisted citizen access.
+
+---
+
+# 15. USER ROLES AND PERMISSIONS
+
+Implement five primary roles.
+
+1. Citizen.
+2. Department Official.
+3. MLA / Local Representative.
+4. Administrator.
+5. Public Auditor / Reviewer.
+
+Every role must have backend-enforced permissions.
+
+Citizens:
+- Submit complaints.
+- Track complaints.
+- Submit verification evidence.
+- View public records.
+- Access schemes.
+- Access government maps and announcements.
+
+Department officials:
+- View assigned complaints.
+- Update authorised records.
+- Respond to complaints.
+- Update projects.
+- Review evidence.
+- Publish authorised departmental updates.
+
+Representatives:
+- View their constituency.
+- Monitor complaints.
+- Forward and escalate issues.
+- Monitor projects.
+- View public reports.
+
+Administrators:
+- Manage users.
+- Manage departments.
+- Manage geographical records.
+- Manage authorised announcements.
+- Manage calendar events.
+- Manage project records.
+- Manage financial data.
+- Review audit logs.
+
+Reviewers:
+- Examine records.
+- Review evidence.
+- Inspect source documents.
+- Record review findings.
+
+Do not give every user unrestricted administrative access.
+
+---
+
+# 16. DESIGN AND UI/UX REQUIREMENTS
+
+The entire application must follow a FORMAL LIGHT THEME.
+
+Visual identity:
+
+- Primary: Navy blue.
+- Secondary: Teal.
+- Background: White.
+- Surface: Light grey.
+- Typography: Professional and readable.
+- Icons: Lucide React.
+
+Design style:
+
+- Government-grade visual simplicity.
+- Clean navigation.
+- Consistent page layouts.
+- Clear tables.
+- Structured forms.
+- Professional dashboards.
+- Accessible contrast.
+- Minimal shadows.
+- Clear status labels.
+- Formal map presentation.
+
+STRICTLY AVOID:
+
+- Dark default theme.
+- Excessive animations.
+- Animated backgrounds.
+- Bouncing cards.
+- Moving decorative elements.
+- Flashy gradients.
+- Unnecessary transitions.
+- Parallax effects.
+- Excessive hover animations.
+- Decorative loading animations.
+
+Use simple loading indicators and restrained interaction feedback only.
+
+The application must be responsive across desktop, tablets and mobile phones.
+
+---
+
+# 17. BILINGUAL IMPLEMENTATION
+
+Support English and Tamil throughout the application.
+
+Requirements:
+
+- Global language selector.
+- English and Tamil navigation.
+- All buttons translated.
+- Form labels translated.
+- Error messages translated.
+- Notifications translated.
+- Dashboard labels translated.
+- Search in both languages.
+- Tamil Unicode support.
+- Tamil-compatible fonts.
+- User language preference.
+
+Use a proper internationalisation framework.
+
+Do not duplicate every page to create a separate Tamil version.
+
+Maintain consistent terminology and accurate translations.
+
+Official document names must be retained accurately.
+
+---
+
+# 18. SECURITY ARCHITECTURE – HIGHEST PRIORITY
+
+This is a proposed government-facing application.
+
+Security must be designed into every layer.
+
+Implement:
+
+### Identity and access
+- Strong authentication.
+- Multi-factor authentication for privileged users.
+- Secure password hashing.
+- Role-based access control.
+- Department-level access restrictions.
+- Session expiration.
+- Session revocation.
+- Login attempt protection.
+
+### Application security
+- HTTPS/TLS configuration.
+- Input validation.
+- Output encoding.
+- CSRF protection where applicable.
+- XSS protection.
+- SQL injection protection.
+- Rate limiting.
+- Secure CORS.
+- Secure HTTP headers.
+- API authentication.
+- Access-control checks on every sensitive endpoint.
+
+### File security
+- File type validation.
+- File size limits.
+- Malware scanning integration.
+- Safe storage.
+- Restricted file access.
+- Secure download links.
+- Removal of unsafe metadata where appropriate.
+
+### Data security
+- Encryption in transit.
+- Encryption at rest for sensitive data.
+- Secrets management.
+- Database access restrictions.
+- Audit trails.
+- Backup encryption.
+- Backup restoration tests.
+- Data retention policies.
+- Privacy controls.
+
+### Operational security
+- Separate development, testing and production environments.
+- Security logging.
+- Monitoring.
+- Incident response procedures.
+- Disaster recovery planning.
+- Dependency vulnerability scanning.
+- Source-code security review.
+- Independent penetration testing before deployment.
+
+### Confidential reporting
+
+Keep confidential corruption or misconduct reports separate from ordinary public complaints.
+
+Protect complainant identity.
+
+Do not claim anonymity unless the system genuinely implements it.
+
+### Government readiness
+
+Prepare the application for review against applicable Indian data protection requirements, CERT-In directions and relevant government security standards.
+
+Do not claim government security certification without formal assessment.
+
+Do not use real citizen personal information in demo environments.
+
+---
+
+# 19. POLITICAL AND GOVERNMENT DATA ACCURACY
+
+This section is mandatory.
+
+Political and government officeholder information changes frequently.
+
+Never hardcode current political leaders, ministers, MLAs or MPs as permanent static data.
+
+Build a structured, updateable political information database.
+
+### Official sources to prioritise
+
+India:
+- Government of India.
+- President of India.
+- Election Commission of India.
+- Parliament of India.
+- Lok Sabha official website.
+- Rajya Sabha official website.
+- Official state government portals.
+- Official legislative assembly portals.
+
+Tamil Nadu:
+- Tamil Nadu Government official portal.
+- Tamil Nadu Legislative Assembly.
+- Tamil Nadu Chief Minister and Council of Ministers official records.
+- Tamil Nadu government department websites.
+- Election Commission election results.
+- Official parliamentary member records.
+
+### Data ingestion requirements
+
+Implement a configurable data update system.
+
+Where official APIs or authorised feeds exist:
+- Integrate them.
+- Validate the response.
+- Record the source.
+- Record retrieval time.
+- Update the database safely.
+
+Where no API exists:
+- Provide authorised administrator data-entry and verification workflows.
+- Allow approved document uploads.
+- Record official source URLs.
+- Record effective dates.
+- Record last verification dates.
+
+Do not assume websites permit automated scraping.
+
+Respect source terms and access restrictions.
+
+### Accuracy requirements
+
+Each political record must contain:
+
+- Person's name.
+- Office or designation.
+- Department or constituency.
+- State.
+- Political party where officially documented.
+- Effective-from date.
+- Effective-to date where applicable.
+- Source.
+- Last verified date.
+- Record status.
+
+For vacancies, changes or uncertain information, display an explicit status instead of guessing.
+
+Use historical records and audit logs when a minister, CM, MLA or MP changes.
+
+Do not publish fabricated leader photographs or unofficially attribute political positions.
+
+---
+
+# 20. MAP TECHNOLOGY AND GEOGRAPHICAL DATA
+
+Use a suitable GIS architecture.
+
+Recommended:
+- Leaflet.
+- OpenStreetMap.
+- GeoJSON.
+- PostgreSQL.
+- PostGIS.
+
+Use verified administrative boundary datasets and official electoral delimitation records wherever available.
+
+Store:
+- State identifiers.
+- District identifiers.
+- Parliamentary constituency identifiers.
+- Assembly constituency identifiers.
+- Taluk identifiers.
+- Local body identifiers.
+- Ward and village identifiers.
+- Geographic boundary geometry.
+- Source and version information.
+
+Do not draw constituency boundaries manually or use arbitrary map polygons.
+
+The map must provide searchable list alternatives for accessibility.
+
+---
+
+# 21. TECHNICAL STACK
+
+Preserve compatible existing components.
+
+Preferred frontend:
+- React.js.
+- Vite.
+- TypeScript.
+- Tailwind CSS.
+- shadcn/ui.
+- Lucide React.
+- React Router.
+- Axios.
+- React Hook Form.
+- Zod.
+- Recharts.
+- Leaflet.
+
+Preferred backend:
+- Python.
+- FastAPI.
+- SQLAlchemy.
+- Pydantic.
+- Alembic.
+- Secure authentication.
+- JWT where appropriate.
+
+Database:
+- PostgreSQL.
+- PostGIS.
+
+Testing:
+- Pytest.
+- Vitest.
+- React Testing Library.
+- API integration tests.
+- End-to-end browser tests.
+
+Infrastructure:
+- Environment-based configuration.
+- Docker where appropriate.
+- Secure file storage.
+- Automated backups.
+- Logging and monitoring.
+
+Use stable, compatible package versions.
+
+---
+
+# 22. DATABASE ENTITIES
+
+Create or complete appropriate database models for:
+
+1. Users.
+2. Roles.
+3. Permissions.
+4. Departments.
+5. Administrative locations.
+6. Geographic boundaries.
+7. Government tenures.
+8. Political officeholders.
+9. Ministers and portfolios.
+10. MLAs.
+11. MPs.
+12. Parliamentary constituencies.
+13. Assembly constituencies.
+14. Complaints.
+15. Complaint assignments.
+16. Complaint attachments.
+17. Complaint status history.
+18. Complaint responses.
+19. Projects.
+20. Project milestones.
+21. Project events.
+22. Verification submissions.
+23. Verification evidence.
+24. Inspection reports.
+25. Schemes.
+26. Scheme documents.
+27. Financial records.
+28. Government announcements.
+29. Calendar events.
+30. Department contacts.
+31. Notifications.
+32. Citizen feedback.
+33. Public reports.
+34. Audit logs.
+35. Data source records.
+36. Data update history.
+
+Use appropriate relationships, constraints, indexes and migrations.
+
+---
+
+# 23. DEVELOPMENT PHASES
+
+Implement the project in four major phases.
+
+## PHASE 1 – FOUNDATION
+
+Build:
+
+- Existing backend inspection and repair.
+- Database configuration.
+- Authentication.
+- Role-based access.
+- Bilingual framework.
+- Formal light-theme UI.
+- Public home page.
+- Citizen dashboard.
+- Complaint management.
+- Department dashboard.
+- Project registry.
+- Department directory.
+- Basic notifications.
+- Admin dashboard.
+
+## PHASE 2 – ACCOUNTABILITY
+
+Build:
+
+- Citizen project verification.
+- Evidence review.
+- Inspection reports.
+- Locality-wise development dashboard.
+- Tamil Nadu map.
+- Assembly constituency map.
+- MLA information.
+- Lok Sabha constituency map.
+- Tamil Nadu MP directory.
+- Rajya Sabha representation.
+- Government project history.
+- Representative dashboard.
+- Smart complaint routing.
+
+## PHASE 3 – GOVERNMENT INFORMATION
+
+Build:
+
+- India political map.
+- State and Union Territory information.
+- Chief Minister directory.
+- State minister directories.
+- Department-to-minister mapping.
+- Government calendar.
+- Government announcements.
+- Scheme assistance.
+- Department-wise financial transparency.
+
+## PHASE 4 – PUBLIC ENGAGEMENT AND READINESS
+
+Build:
+
+- Public data reports.
+- Citizen feedback.
+- Advanced notifications.
+- Full Tamil translations.
+- Accessibility improvements.
+- Security testing.
+- Performance testing.
+- Integration testing.
+- Backup and recovery testing.
+- Deployment preparation.
+- Complete documentation.
+
+Do not omit features from later phases.
+
+---
+
+# 24. DEMONSTRATION DATA
+
+Create clearly labelled DEMO DATA.
+
+Use realistic example records for:
+
+- Complaints.
+- Projects.
+- Localities.
+- Schemes.
+- Announcements.
+- Calendar events.
+- Financial records.
+- Verification submissions.
+
+Do not present fabricated information as real government information.
+
+For current political leaders and elected representatives, use verified official records only.
+
+If verified current information cannot be retrieved, use an explicit unavailable status.
+
+---
+
+# 25. AUTOMATED IMPLEMENTATION PROCESS
+
+Execute these steps autonomously using your available tools.
+
+1. Inspect the existing project.
+2. Prepare the technical gap analysis.
+3. Preserve working code.
+4. Fix existing backend problems.
+5. Configure the database.
+6. Implement missing database models.
+7. Implement APIs.
+8. Implement authentication and permissions.
+9. Build the frontend.
+10. Build all 17 features.
+11. Implement bilingual support.
+12. Integrate India and Tamil Nadu political maps.
+13. Integrate official information sources where authorised.
+14. Create demonstration data.
+15. Implement audit logging.
+16. Run database migrations.
+17. Install dependencies.
+18. Run backend tests.
+19. Run frontend tests.
+20. Run integration tests.
+21. Run security checks.
+22. Run the production build.
+23. Fix all identified errors.
+24. Verify the complete application.
+25. Launch it where the environment permits.
+26. Prepare deployment and handover documentation.
+
+Do not stop after generating files.
+
+Do not stop after building the frontend.
+
+Do not stop at Swagger UI.
+
+Do not claim successful implementation without executing the relevant tests.
+
+If a command fails, diagnose the error, fix it and rerun the command.
+
+If an external permission or credential is required, clearly identify it and continue with the rest of the implementation.
+
+---
+
+# 26. TESTING AND ACCEPTANCE CRITERIA
+
+The application is not complete until:
+
+- All five user roles work.
+- Role permissions are enforced by the backend.
+- Citizens can submit and track complaints.
+- Officials can manage assigned complaints.
+- Projects can be registered and tracked.
+- Citizen verification works.
+- Project history is retained.
+- Locality maps work.
+- Tamil Nadu Assembly constituency information is correctly mapped.
+- All 234 Assembly constituencies are represented in the database.
+- All 39 Tamil Nadu Lok Sabha constituencies are represented.
+- Tamil Nadu's 18 Rajya Sabha seats are represented separately.
+- India state and Union Territory map navigation works.
+- Political leadership information has official sources and effective dates.
+- Ministerial portfolios can be updated without losing history.
+- Government calendar works.
+- Announcements can be published through authorised workflows.
+- Scheme information is available.
+- Financial dashboards use correct financial definitions.
+- English and Tamil switching works.
+- Notifications work.
+- Public reports do not expose private information.
+- All functional buttons perform real actions.
+- Backend APIs are connected to frontend pages.
+- Automated tests are executed.
+- Security checks are performed.
+- Installation and deployment instructions are complete.
+
+---
+
+# 27. FINAL DELIVERABLES
+
+Provide:
+
+1. Complete frontend source code.
+2. Complete backend source code.
+3. Database schema and migrations.
+4. All 17 implemented features.
+5. India political map.
+6. Tamil Nadu political map.
+7. Assembly and parliamentary constituency information.
+8. Government leadership and minister directory.
+9. English and Tamil interface.
+10. Authentication and permissions.
+11. Audit logging.
+12. Demo data.
+13. API documentation.
+14. Automated tests.
+15. Security documentation.
+16. Architecture documentation.
+17. Database documentation.
+18. README.
+19. Environment variable examples.
+20. Installation instructions.
+21. Deployment instructions.
+22. Backup and recovery instructions.
+23. Known limitations.
+24. Final test report.
+
+If your environment supports running the application, launch the frontend and backend and verify both.
+
+Report the actual frontend URL, backend URL and Swagger URL.
+
+Do not fabricate URLs or claim deployment if it did not occur.
+
+---
+
+# 28. FINAL NON-NEGOTIABLE RULES
+
+1. The design must remain a formal LIGHT THEME.
+2. Do not add excessive animations.
+3. Do not omit any of the 17 features.
+4. Do not remove existing working backend code.
+5. Do not invent government information.
+6. Do not hardcode changing political leadership information.
+7. Do not mix Lok Sabha and Rajya Sabha constituencies.
+8. Do not use inaccurate constituency boundaries.
+9. Do not publish citizen allegations as verified facts.
+10. Do not expose private citizen information.
+11. Do not pretend to have government API access.
+12. Do not claim security certification without formal assessment.
+13. Do not use fake responses to simulate working functionality.
+14. Do not declare completion without actual testing.
+15. Keep the application politically neutral and accessible.
+
+# FINAL COMMAND
+
+START BY INSPECTING THE EXISTING CIVIC LENZ PROJECT.
+
+Then continue autonomously to build the complete full-stack application.
+
+Implement all 17 features in the four development phases.
+
+Preserve existing working functionality.
+
+Use your actual coding and execution tools.
+
+Create files, modify code, install dependencies, configure the database, integrate APIs, implement maps, run tests, fix errors and launch the application wherever supported.
+
+I want a complete working CIVIC LENZ application, not merely a design, demonstration or development plan.
+
+BEGIN NOW.

@@ -1,0 +1,394 @@
+// Civic Lenz — Government transparency & accountability platform (prototype)
+// SQLite + Prisma. Political records carry verification metadata by design
+// (official source, effective date, last-verified, lifecycle status).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────── Geography / jurisdiction ───────────────────────────
+
+model State {
+  id              String   @id @default(cuid())
+  code            String   @unique // e.g. "TN"
+  name            String
+  region          String? // North / South / East / West / North-East / UT
+  isUnionTerritory Boolean @default(false)
+  assemblySeats   Int      @default(0)
+  lokSabhaSeats   Int      @default(0)
+  rajyaSabhaSeats Int      @default(0)
+  isFocusState    Boolean  @default(false)
+  capital         String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  districts District[]
+  records   PoliticalRecord[]
+  constituencies Constituency[]
+}
+
+model District {
+  id           String  @id @default(cuid())
+  stateId      String
+  state        State   @relation(fields: [stateId], references: [id])
+  name         String
+  code         String? // LGD / census district code when available
+  headquarters String?
+  formedOn     String? // e.g. "2019-11-26" for newly formed districts
+  population   Int?
+  geoName      String? // exact feature name in the GeoJSON dataset for map joins
+
+  records       PoliticalRecord[]
+  projects      Project[]
+  complaints    Complaint[]
+  constituencies Constituency[]
+
+  @@unique([stateId, name])
+}
+
+// ─────────────────────────── Electoral boundaries (kept separate from administrative) ───────────────────────────
+// One row per Assembly (234 in TN) or Parliamentary (39 in TN) constituency.
+// Administrative districts never double as constituencies; ACs link to their
+// parent PC via parentNo and to the modern district via districtId (the district
+// that contains the seat's predominant area — several ACs span district lines).
+
+model Constituency {
+  id           String   @id @default(cuid())
+  type         String // ASSEMBLY | PARLIAMENTARY
+  no           Int // AC 1–234 / PC 1–39 (ECI delimitation numbering)
+  name         String
+  reservation  String? // SC | ST | null
+  stateId      String
+  state        State    @relation(fields: [stateId], references: [id])
+  districtId   String? // for ASSEMBLY rows: the modern district containing the seat
+  district     District? @relation(fields: [districtId], references: [id])
+  parentNo     Int? // for ASSEMBLY rows: parent PC number (1–39)
+  geoName      String? // exact feature name in the GeoJSON layer for map joins
+
+  // Current office holder snapshot (denormalised for the directory views).
+  holderName     String?
+  holderParty    String?
+  holderPartyShort String?
+  holderSince    DateTime? // election / by-poll date that produced the current holder
+  holderStatus   String    @default("CURRENT") // CURRENT | VACANT
+  officeTitle    String? // e.g. "Speaker, Tamil Nadu Legislative Assembly" / "Cabinet Minister — Finance"
+  // Last election detail
+  electionWinner  String?
+  electionParty   String?
+  electionMargin  String? // votes, formatted
+  electionMarginPct String?
+  runnerUpName    String?
+  runnerUpParty   String?
+  holderNotes     String? // defections, by-poll history, court cases, etc.
+
+  // ── Verification metadata ──
+  officialSource     String?
+  sourceName         String?
+  lastVerifiedAt     DateTime?
+  verifiedBy         String?
+  verificationStatus String  @default("PENDING_VERIFICATION") // VERIFIED | PENDING_VERIFICATION | OUTDATED | HISTORICAL | UNAVAILABLE
+  verificationNote   String?
+  naturalKey         String  @unique // "TN-AC-13" | "TN-PC-2" — stable key for sync dedupe
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+// ─────────────────────────── Political directory (verification-first) ───────────────────────────
+
+model PoliticalRecord {
+  id               String    @id @default(cuid())
+  name             String
+  office           String // PRESIDENT | VICE_PRESIDENT | PRIME_MINISTER | UNION_MINISTER | LOK_SABHA_SPEAKER | GOVERNOR | CHIEF_MINISTER | DEPUTY_CM | SPEAKER | DEPUTY_SPEAKER | LEADER_OF_OPPOSITION | MINISTER | MLA | MP_LOK_SABHA | MP_RAJYA_SABHA | CONSTITUENCY_VACANCY
+  officeLabel      String? // human readable, e.g. "Minister for Finance & Human Resources Management"
+  party            String?
+  partyShort       String?
+  jurisdiction     String @default("STATE") // NATIONAL | STATE | DISTRICT
+  stateId          String?
+  state            State?    @relation(fields: [stateId], references: [id])
+  districtId       String?
+  district         District? @relation(fields: [districtId], references: [id])
+  constituencyType String? // ASSEMBLY | PARLIAMENTARY | COUNCIL | DEPARTMENT | STATEWIDE
+  constituencyName String? // AC / PC name, or department / statewide
+  department       String?
+  portfolio        String?
+  accentColor      String? // avatar accent
+  tenure           String? // "2021 – present"
+  // ── Verification metadata (required for production correctness) ──
+  officialSource   String? // URL of the authoritative source
+  sourceName       String? // e.g. "Tamil Nadu Legislative Assembly", "Election Commission of India"
+  effectiveDate    DateTime?
+  endPeriodDate    DateTime?
+  lastVerifiedAt   DateTime?
+  verifiedBy       String?
+  status           String    @default("PENDING_VERIFICATION") // CURRENT | FORMER | VACANT | PENDING_VERIFICATION
+  verificationStatus String  @default("PENDING_VERIFICATION") // VERIFIED | PENDING_VERIFICATION | OUTDATED | HISTORICAL | UNAVAILABLE
+  verificationNote String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  verificationLogs VerificationLog[]
+}
+
+model VerificationLog {
+  id             String          @id @default(cuid())
+  recordId       String
+  record         PoliticalRecord @relation(fields: [recordId], references: [id])
+  action         String // CREATED | VERIFIED | STATUS_CHANGED | SOURCE_UPDATED | EDITED
+  previousStatus String?
+  newStatus      String?
+  sourceUrl      String?
+  verifiedBy     String
+  note           String?
+  createdAt      DateTime        @default(now())
+}
+
+// ─────────────────────────── Information portal content ───────────────────────────
+
+model Department {
+  id            String  @id @default(cuid())
+  name          String
+  shortName     String?
+  description   String
+  ministerName  String?
+  secretaryName String?
+  headName      String?
+  contactEmail  String?
+  contactPhone  String?
+  address       String?
+  website       String? // official department website
+  services      String? // key citizen-facing services (summary)
+  budgetInrCr   Float   @default(0) // budget in ₹ crore (demonstration data unless cited)
+  // ── Verification metadata ──
+  officialSource String?
+  sourceName     String?
+  lastVerifiedAt DateTime?
+  verificationStatus String @default("PENDING_VERIFICATION") // VERIFIED | PENDING_VERIFICATION | OUTDATED | HISTORICAL | UNAVAILABLE
+  verificationNote   String?
+
+  schemes      Scheme[]
+  projects     Project[]
+  complaints   Complaint[]         @relation("assignedDepartment")
+  announcements Announcement[]
+  staff        DemoUser[]
+}
+
+model Scheme {
+  id           String     @id @default(cuid())
+  name         String
+  level        String     @default("TN") // TN | CENTRAL
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id])
+  description  String
+  eligibility  String?
+  benefits     String?
+  beneficiaries String?
+  launchDate   DateTime?
+  status       String     @default("ACTIVE") // ACTIVE | UPDATED | SUSPENDED | DISCONTINUED
+  budgetInrCr  Float?
+  applicationProcess String? // how citizens apply
+  applicationUrl     String? // official application portal
+  documentsRequired  String? // documents checklist summary
+  guidelinesUrl      String? // official guidelines document link
+  // ── Verification metadata ──
+  officialSource String?
+  sourceName     String?
+  lastVerifiedAt DateTime?
+  verifiedBy     String?
+  verificationStatus String @default("PENDING_VERIFICATION") // VERIFIED | PENDING_VERIFICATION | OUTDATED | HISTORICAL | UNAVAILABLE
+  verificationNote   String? // e.g. "Renamed from X on <date>"
+  naturalKey   String? @unique // stable key for sync dedupe, e.g. "scheme:kmut"
+}
+
+model Announcement {
+  id           String     @id @default(cuid())
+  title        String
+  body         String
+  category     String // POLICY | TENDER | SCHEME | PUBLIC_NOTICE | PRESS
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id])
+  publisher    String? // ministry attribution when no Department row exists (e.g. Union ministries)
+  publishedAt  DateTime   @default(now())
+  isImportant  Boolean    @default(false)
+  // ── Verification metadata ──
+  officialSource String? // direct link to the release / order / notification
+  sourceName     String? // e.g. "Press Information Bureau", "tn.gov.in press release"
+  lastVerifiedAt DateTime?
+  verificationStatus String @default("PENDING_VERIFICATION") // VERIFIED | PENDING_VERIFICATION | OUTDATED | HISTORICAL | UNAVAILABLE
+  naturalKey   String? @unique // stable key for sync dedupe, e.g. the source URL
+}
+
+model CalendarEvent {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  startsAt    DateTime
+  endsAt      DateTime?
+  location    String?
+  type        String // ASSEMBLY_SESSION | REVIEW_MEETING | PUBLIC_HEARING | SCHEME_LAUNCH | DEADLINE | ELECTION
+  organizer   String?
+  verificationStatus String @default("PENDING_VERIFICATION") // VERIFIED | PENDING_VERIFICATION | OUTDATED | HISTORICAL | UNAVAILABLE
+  sourceNote  String? // where this schedule comes from / what needs confirmation
+}
+
+// ─────────────────────────── Accountability portal ───────────────────────────
+
+model Project {
+  id            String    @id @default(cuid())
+  code          String    @unique // e.g. "TN-PWD-2024-017"
+  name          String
+  description   String
+  departmentId  String?
+  department    Department? @relation(fields: [departmentId], references: [id])
+  districtId    String?
+  district      District? @relation(fields: [districtId], references: [id])
+  category      String // INFRASTRUCTURE | WATER | HEALTH | EDUCATION | ENERGY | URBAN | TRANSPORT
+  budgetInrCr   Float
+  sanctionedInrCr Float
+  spentInrCr    Float
+  progress      Int       @default(0) // 0-100
+  status        String    @default("PROPOSED") // PROPOSED | TENDERING | IN_PROGRESS | COMPLETED | ON_HOLD
+  startDate     DateTime?
+  targetEndDate DateTime?
+  completedOn   DateTime?
+  contractor    String?
+  contractorReg String?
+  fundedBy      String?
+  createdAt     DateTime  @default(now())
+
+  milestones ProjectMilestone[]
+}
+
+model ProjectMilestone {
+  id               String    @id @default(cuid())
+  projectId        String
+  project          Project   @relation(fields: [projectId], references: [id])
+  title            String
+  description      String?
+  dueDate          DateTime?
+  completedOn      DateTime?
+  status           String    @default("PENDING") // PENDING | IN_PROGRESS | DONE | DELAYED
+  amountReleasedCr Float?
+  sortOrder        Int       @default(0)
+}
+
+model Complaint {
+  id            String     @id @default(cuid())
+  ticketNo      String     @unique // CL-2025-000123
+  title         String
+  description   String
+  category      String // ROAD | WATER | ELECTRICITY | SANITATION | HEALTH | EDUCATION | CORRUPTION | OTHER
+  priority      String     @default("MEDIUM") // LOW | MEDIUM | HIGH | CRITICAL
+  status        String     @default("SUBMITTED") // SUBMITTED | ACKNOWLEDGED | IN_PROGRESS | RESOLVED | REJECTED | ESCALATED
+  districtId    String?
+  district      District?  @relation(fields: [districtId], references: [id])
+  citizenName   String
+  citizenContact String? // masked for public display
+  wardOrArea    String?
+  assignedDepartmentId String?
+  assignedDepartment Department? @relation("assignedDepartment", fields: [assignedDepartmentId], references: [id])
+  assignedTo    String?
+  slaDueAt      DateTime?
+  resolutionNote String?
+  satisfaction  Int? // 1-5
+  isPublic      Boolean    @default(true)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  updates ComplaintUpdate[]
+}
+
+model ComplaintUpdate {
+  id          String   @id @default(cuid())
+  complaintId String
+  complaint   Complaint @relation(fields: [complaintId], references: [id])
+  note        String
+  statusAfter String
+  byName      String
+  byRole      String // CITIZEN | DEPT_OFFICER | ADMIN | AUDITOR
+  createdAt   DateTime @default(now())
+}
+
+model CitizenVerificationRequest {
+  id             String    @id @default(cuid())
+  requestNo      String    @unique // CV-2025-000045
+  citizenName    String
+  requestType    String // RESIDENCE | INCOME | BPL | SCHEME_ENROLLMENT | OTHER
+  documentMasked String?
+  status         String    @default("PENDING") // PENDING | APPROVED | REJECTED
+  remarks        String?
+  submittedAt    DateTime  @default(now())
+  processedAt    DateTime?
+}
+
+// ─────────────────────────── Administration / audit ───────────────────────────
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actor     String
+  actorRole String
+  action    String
+  entity    String
+  entityId  String?
+  summary   String
+  details   String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+}
+
+model DemoUser {
+  id           String  @id @default(cuid())
+  username     String  @unique
+  name         String
+  role         String // ADMIN | DEPT_OFFICER | AUDITOR
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id])
+  password     String // DEMO ONLY — production must use NextAuth + hashed credentials
+}
+
+// ─────────────────────────── Live data update system ───────────────────────────
+
+model DataSource {
+  id            String   @id @default(cuid())
+  key           String   @unique // stable registry key, e.g. "pib-releases"
+  name          String
+  category      String // POLITICAL_LEADERSHIP | ANNOUNCEMENTS | SCHEMES | DEPARTMENTS | ELECTORAL_BOUNDARIES | ADMIN_BOUNDARIES
+  url           String // official endpoint / page
+  method        String   @default("MANUAL_ADMIN") // API | RSS | DATASET_DOWNLOAD | MANUAL_ADMIN
+  cadenceHours  Int      @default(24) // suggested verification cadence
+  enabled       Boolean  @default(true)
+  requiresConfig String? // e.g. "DATA_GOV_IN_API_KEY" — when set, sync needs this env var
+  official      Boolean  @default(true)
+  description   String?
+  // last run bookkeeping
+  lastSyncedAt  DateTime?
+  lastSyncStatus String? // SUCCESS | PARTIAL | FAILED
+  lastSyncMessage String?
+  lastSyncRunId String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  logs          SyncLog[]
+}
+
+model SyncLog {
+  id           String   @id @default(cuid())
+  runId        String
+  sourceKey    String
+  source       DataSource @relation(fields: [sourceKey], references: [key])
+  startedAt    DateTime @default(now())
+  finishedAt   DateTime?
+  status       String // SUCCESS | PARTIAL | FAILED
+  triggeredBy  String   @default("SCHEDULED") // SCHEDULED | MANUAL_ADMIN | STARTUP
+  recordsFetched  Int @default(0)
+  recordsAdded    Int @default(0)
+  recordsUpdated  Int @default(0)
+  recordsUnchanged Int @default(0)
+  recordsSkipped  Int @default(0)
+  errorMessage String?
+  details      String? // human-readable run summary
+}

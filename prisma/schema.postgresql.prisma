@@ -1,0 +1,536 @@
+// ==============================================================================
+// CIVIC LENZ – PostgreSQL Schema for Supabase
+// Production Target Prisma Definition (Direct / Pooler connection to Supabase)
+// ==============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL") // Connection pooling via Supabase pooler (port 6543)
+  directUrl = env("POSTGRES_URL_NON_POOLING") // Direct connection for migrations (port 5432)
+}
+
+// ── Shared Geographic Boundaries ─────────────────────────────────────────────
+
+model State {
+  id              String   @id @default(uuid())
+  code            String   @unique
+  name            String
+  region          String?
+  isUnionTerritory Boolean @default(false)
+  assemblySeats   Int      @default(0)
+  lokSabhaSeats   Int      @default(0)
+  rajyaSabhaSeats Int      @default(0)
+  isFocusState    Boolean  @default(false)
+  capital         String?
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  districts       District[]
+  constituenciesAC ConstituencyAC[]
+  constituenciesPC ConstituencyPC[]
+  politicalRecords PoliticalRecord[]
+
+  @@map("states")
+}
+
+model District {
+  id           String   @id @default(uuid())
+  stateId      String   @map("state_id")
+  state        State    @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  name         String
+  code         String?
+  headquarters String?
+  formedOn     String?  @map("formed_on")
+  population   Int?
+  geoName      String?  @map("geo_name")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  projects         Project[]
+  complaints       Complaint[]
+  constituenciesAC ConstituencyAC[]
+  politicalRecords PoliticalRecord[]
+  localitiesWards  LocalityWard[]
+
+  @@unique([stateId, name])
+  @@map("districts")
+}
+
+// ── Module 3: Locality-Wise Government Development ───────────────────────────
+
+model ConstituencyAC {
+  id               Int       @id // Delimitation number (1-234)
+  name             String
+  reservation      String?
+  stateId          String    @map("state_id")
+  state            State     @relation(fields: [stateId], references: [id])
+  districtId       String?   @map("district_id")
+  district         District? @relation(fields: [districtId], references: [id])
+  parentPcNo       Int?      @map("parent_pc_no")
+  geoName          String?   @map("geo_name")
+  mlaName          String?   @map("mla_name")
+  mlaParty         String?   @map("mla_party")
+  mlaPartyShort    String?   @map("mla_party_short")
+  mlaSince         DateTime? @map("mla_since")
+  mlaStatus        String    @default("CURRENT") @map("mla_status")
+  officeTitle      String?   @map("office_title")
+  electionWinner   String?   @map("election_winner")
+  electionParty    String?   @map("election_party")
+  electionMargin   String?   @map("election_margin")
+  runnerUpName     String?   @map("runner_up_name")
+  runnerUpParty    String?   @map("runner_up_party")
+  totalProjects    Int       @default(0) @map("total_projects")
+  allocatedFundsCr Decimal   @default(0.00) @map("allocated_funds_cr") @db.Decimal(12, 2)
+  spentFundsCr     Decimal   @default(0.00) @map("spent_funds_cr") @db.Decimal(12, 2)
+  officialSource   String?   @map("official_source")
+  sourceName       String?   @map("source_name")
+  lastVerifiedAt   DateTime? @map("last_verified_at")
+  verificationStatus String  @default("VERIFIED") @map("verification_status")
+  naturalKey       String    @unique @map("natural_key")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  projects         Project[]
+  complaints       Complaint[]
+  localitiesWards  LocalityWard[]
+
+  @@map("constituencies_ac")
+}
+
+model ConstituencyPC {
+  id               Int       @id // Delimitation number (1-39)
+  name             String
+  reservation      String?
+  stateId          String    @map("state_id")
+  state            State     @relation(fields: [stateId], references: [id])
+  mpName           String?   @map("mp_name")
+  mpParty          String?   @map("mp_party")
+  mpPartyShort     String?   @map("mp_party_short")
+  mpSince          DateTime? @map("mp_since")
+  mpStatus         String    @default("CURRENT") @map("mp_status")
+  totalProjects    Int       @default(0) @map("total_projects")
+  allocatedFundsCr Decimal   @default(0.00) @map("allocated_funds_cr") @db.Decimal(12, 2)
+  spentFundsCr     Decimal   @default(0.00) @map("spent_funds_cr") @db.Decimal(12, 2)
+  officialSource   String?   @map("official_source")
+  sourceName       String?   @map("source_name")
+  naturalKey       String    @unique @map("natural_key")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  @@map("constituencies_pc")
+}
+
+model LocalityWard {
+  id                      String          @id @default(uuid())
+  districtId              String          @map("district_id")
+  district                District        @relation(fields: [districtId], references: [id], onDelete: Cascade)
+  constituencyAcNo        Int?            @map("constituency_ac_no")
+  constituencyAC          ConstituencyAC? @relation(fields: [constituencyAcNo], references: [id])
+  wardNumber              Int?            @map("ward_number")
+  wardName                String          @map("ward_name")
+  localityType            String          @default("MUNICIPAL_WARD") @map("locality_type")
+  corporatorOrCouncillor  String?         @map("corporator_or_councillor")
+  population              Int?
+  totalCivicWorks         Int             @default(0) @map("total_civic_works")
+  createdAt               DateTime        @default(now()) @map("created_at")
+
+  @@map("localities_wards")
+}
+
+// ── Departments & Budgets (Module 7) ─────────────────────────────────────────
+
+model Department {
+  id                 String   @id @default(uuid())
+  name               String
+  shortName          String?  @map("short_name")
+  description        String
+  ministerName       String?  @map("minister_name")
+  secretaryName      String?  @map("secretary_name")
+  headName           String?  @map("head_name")
+  contactEmail       String?  @map("contact_email")
+  contactPhone       String?  @map("contact_phone")
+  address            String?
+  website            String?
+  services           String?
+  budgetInrCr        Decimal  @default(0.00) @map("budget_inr_cr") @db.Decimal(14, 2)
+  officialSource     String?  @map("official_source")
+  sourceName         String?  @map("source_name")
+  lastVerifiedAt     DateTime? @map("last_verified_at")
+  verificationStatus String   @default("VERIFIED") @map("verification_status")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  schemes            Scheme[]
+  projects           Project[]
+  complaints         Complaint[]
+  announcements      Announcement[]
+  budgets            DepartmentBudget[]
+  vouchers           ExpenditureVoucher[]
+
+  @@map("departments")
+}
+
+model DepartmentBudget {
+  id                   String     @id @default(uuid())
+  departmentId         String     @map("department_id")
+  department           Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  financialYear        String     @map("financial_year")
+  allocatedCr          Decimal    @map("allocated_cr") @db.Decimal(14, 2)
+  expenditureCr        Decimal    @default(0.00) @map("expenditure_cr") @db.Decimal(14, 2)
+  schemesCount         Int        @default(0) @map("schemes_count")
+  sanctionOrdersCount  Int        @default(0) @map("sanction_orders_count")
+  lastAuditedAt        DateTime?  @map("last_audited_at")
+  createdAt            DateTime   @default(now()) @map("created_at")
+
+  @@unique([departmentId, financialYear])
+  @@map("department_budgets")
+}
+
+model ExpenditureVoucher {
+  id               String      @id @default(uuid())
+  departmentId     String      @map("department_id")
+  department       Department  @relation(fields: [departmentId], references: [id])
+  projectId        String?     @map("project_id")
+  project          Project?    @relation(fields: [projectId], references: [id])
+  voucherNumber    String      @unique @map("voucher_number")
+  payeeName        String      @map("payee_name")
+  amountInr        Decimal     @map("amount_inr") @db.Decimal(14, 2)
+  paymentDate      DateTime    @map("payment_date") @db.Date
+  description      String
+  sanctionOrderUrl String?     @map("sanction_order_url")
+  createdAt        DateTime    @default(now()) @map("created_at")
+
+  @@map("expenditure_vouchers")
+}
+
+// ── Module 1: Projects & Promises ────────────────────────────────────────────
+
+model ManifestoPromise {
+  id                    String    @id @default(uuid())
+  title                 String
+  description           String
+  category              String
+  rulingParty           String    @map("ruling_party")
+  manifestoYear         Int       @map("manifesto_year")
+  status                String    @default("In progress")
+  fulfillmentPercentage Int       @default(0) @map("fulfillment_percentage")
+  officialGazetteRef    String?   @map("official_gazette_ref")
+  createdAt             DateTime  @default(now()) @map("created_at")
+
+  projects              Project[]
+
+  @@map("manifesto_promises")
+}
+
+model Project {
+  id                   String            @id @default(uuid())
+  code                 String            @unique
+  name                 String
+  description          String
+  departmentId         String?           @map("department_id")
+  department           Department?       @relation(fields: [departmentId], references: [id])
+  districtId           String?           @map("district_id")
+  district             District?         @relation(fields: [districtId], references: [id])
+  constituencyAcNo     Int?              @map("constituency_ac_no")
+  constituencyAC       ConstituencyAC?   @relation(fields: [constituencyAcNo], references: [id])
+  category             String
+  manifestoPromiseId   String?           @map("manifesto_promise_id")
+  manifestoPromise     ManifestoPromise? @relation(fields: [manifestoPromiseId], references: [id])
+  budgetInrCr          Decimal           @map("budget_inr_cr") @db.Decimal(14, 2)
+  spentInrCr           Decimal           @default(0.00) @map("spent_inr_cr") @db.Decimal(14, 2)
+  progressPercent      Int               @default(0) @map("progress_percent")
+  status               String            @default("In progress")
+  contractorName       String?           @map("contractor_name")
+  sanctionOrderNo      String?           @map("sanction_order_no")
+  startDate            DateTime?         @map("start_date")
+  targetCompletionDate DateTime?         @map("target_completion_date")
+  actualCompletionDate DateTime?         @map("actual_completion_date")
+  officialSource       String?           @map("official_source")
+  sourceName           String?           @map("source_name")
+  lastVerifiedAt       DateTime?         @map("last_verified_at")
+  verificationStatus   String            @default("VERIFIED") @map("verification_status")
+  createdAt            DateTime          @default(now()) @map("created_at")
+  updatedAt            DateTime          @updatedAt @map("updated_at")
+
+  milestones           ProjectMilestone[]
+  citizenVerifications CitizenVerification[]
+  regimeHistory        ProjectRegimeHistory[]
+  vouchers             ExpenditureVoucher[]
+  qualityAudits        QualityAudit[]
+
+  @@map("projects")
+}
+
+model ProjectMilestone {
+  id               String    @id @default(uuid())
+  projectId        String    @map("project_id")
+  project          Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title            String
+  description      String?
+  targetDate       DateTime  @map("target_date")
+  completedAt      DateTime? @map("completed_at")
+  status           String    @default("PENDING")
+  weightagePercent Int       @default(0) @map("weightage_percent")
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  @@map("project_milestones")
+}
+
+// ── Module 2: Citizen Verification ───────────────────────────────────────────
+
+model CitizenVerification {
+  id                      String    @id @default(uuid())
+  projectId               String    @map("project_id")
+  project                 Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  citizenId               String    @map("citizen_id") @db.Uuid
+  groundStatus            String    @map("ground_status")
+  progressEstimate        Int?      @map("progress_estimate")
+  rating                  Int?
+  notes                   String
+  photoUrls               String[]  @default([]) @map("photo_urls")
+  geoLatitude             Decimal?  @map("geo_latitude") @db.Decimal(9, 6)
+  geoLongitude            Decimal?  @map("geo_longitude") @db.Decimal(9, 6)
+  isAuditorVerified       Boolean   @default(false) @map("is_auditor_verified")
+  auditedBy               String?   @map("audited_by") @db.Uuid
+  auditedAt               DateTime? @map("audited_at")
+  createdAt               DateTime  @default(now()) @map("created_at")
+
+  @@map("citizen_verifications")
+}
+
+// ── Module 4: Project Regime History ─────────────────────────────────────────
+
+model PoliticalRegime {
+  id             String    @id @default(uuid())
+  name           String
+  startYear      Int       @map("start_year")
+  endYear        Int?      @map("end_year")
+  rulingParty    String    @map("ruling_party")
+  chiefMinister  String    @map("chief_minister")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  historyEntries ProjectRegimeHistory[]
+
+  @@map("political_regimes")
+}
+
+model ProjectRegimeHistory {
+  id                 String           @id @default(uuid())
+  projectId          String           @map("project_id")
+  project            Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  regimeId           String?          @map("regime_id")
+  regime             PoliticalRegime? @relation(fields: [regimeId], references: [id])
+  rulingParty        String           @map("ruling_party")
+  statusAtTransition String           @map("status_at_transition")
+  actionTaken        String           @map("action_taken")
+  budgetModifiedCr   Decimal?         @map("budget_modified_cr") @db.Decimal(14, 2)
+  transitionNotes    String           @map("transition_notes")
+  officialGazetteUrl String?          @map("official_gazette_url")
+  recordedAt         DateTime         @default(now()) @map("recorded_at")
+
+  @@map("project_regime_history")
+}
+
+// ── Module 5: Quality & Complaints ───────────────────────────────────────────
+
+model Complaint {
+  id                    String            @id @default(uuid())
+  ticketNumber          String            @unique @map("ticket_number")
+  citizenId             String?           @map("citizen_id") @db.Uuid
+  departmentId          String?           @map("department_id")
+  department            Department?       @relation(fields: [departmentId], references: [id])
+  districtId            String?           @map("district_id")
+  district              District?         @relation(fields: [districtId], references: [id])
+  constituencyAcNo      Int?              @map("constituency_ac_no")
+  constituencyAC        ConstituencyAC?   @relation(fields: [constituencyAcNo], references: [id])
+  category              String
+  title                 String
+  description           String
+  evidenceUrls          String[]          @default([]) @map("evidence_urls")
+  status                String            @default("Submitted")
+  priority              String            @default("Medium")
+  assignedOfficerId     String?           @map("assigned_officer_id") @db.Uuid
+  resolutionNotes       String?           @map("resolution_notes")
+  citizenFeedbackRating Int?              @map("citizen_feedback_rating")
+  createdAt             DateTime          @default(now()) @map("created_at")
+  resolvedAt            DateTime?         @map("resolved_at")
+
+  updates               ComplaintUpdate[]
+  escalations           GrievanceEscalation[]
+  qualityAudits         QualityAudit[]
+
+  @@map("complaints")
+}
+
+model ComplaintUpdate {
+  id              String    @id @default(uuid())
+  complaintId     String    @map("complaint_id")
+  complaint       Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  updatedByUserId String?   @map("updated_by_user_id") @db.Uuid
+  updatedByRole   String    @map("updated_by_role")
+  note            String
+  fromStatus      String?   @map("from_status")
+  toStatus        String?   @map("to_status")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  @@map("complaint_updates")
+}
+
+model QualityAudit {
+  id                        String     @id @default(uuid())
+  projectId                 String?    @map("project_id")
+  project                   Project?   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  complaintId               String?    @map("complaint_id")
+  complaint                 Complaint? @relation(fields: [complaintId], references: [id])
+  auditorId                 String     @map("auditor_id") @db.Uuid
+  structuralIntegrityScore  Int?       @map("structural_integrity_score")
+  safetyCompliance          Boolean    @default(true) @map("safety_compliance")
+  auditorRemarks            String     @map("auditor_remarks")
+  auditDate                 DateTime   @default(now()) @map("audit_date") @db.Date
+  createdAt                 DateTime   @default(now()) @map("created_at")
+
+  @@map("quality_audits")
+}
+
+// ── Module 6: Schemes & Escalations ──────────────────────────────────────────
+
+model Scheme {
+  id                 String    @id @default(uuid())
+  name               String
+  naturalKey         String?   @unique @map("natural_key")
+  level              String    @default("TN")
+  departmentId       String?   @map("department_id")
+  department         Department? @relation(fields: [departmentId], references: [id])
+  description        String
+  eligibility        String?
+  benefits           String?
+  beneficiaries      String?
+  eligibilityRules   Json?     @default("{}") @map("eligibility_rules")
+  financialAssistance String?  @map("financial_assistance")
+  applicationProcess String?   @map("application_process")
+  applicationUrl     String?   @map("application_url")
+  documentsRequired  String?   @map("documents_required")
+  guidelinesUrl      String?   @map("guidelines_url")
+  status             String    @default("ACTIVE")
+  officialSource     String?   @map("official_source")
+  sourceName         String?   @map("source_name")
+  lastVerifiedAt     DateTime? @map("last_verified_at")
+  verificationStatus String    @default("VERIFIED") @map("verification_status")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  applications       SchemeApplication[]
+
+  @@map("schemes")
+}
+
+model SchemeApplication {
+  id               String    @id @default(uuid())
+  schemeId         String    @map("scheme_id")
+  scheme           Scheme    @relation(fields: [schemeId], references: [id])
+  citizenId        String    @map("citizen_id") @db.Uuid
+  applicationRefNo String?   @map("application_ref_no")
+  currentStage     String    @default("Draft") @map("current_stage")
+  notes            String?
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  @@map("scheme_applications")
+}
+
+model GrievanceEscalation {
+  id                 String    @id @default(uuid())
+  complaintId        String    @map("complaint_id")
+  complaint          Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  escalatedByUserId  String    @map("escalated_by_user_id") @db.Uuid
+  escalationTier     String    @map("escalation_tier")
+  escalationReason   String    @map("escalation_reason")
+  status             String    @default("Pending Review")
+  officerInChargeId  String?   @map("officer_in_charge_id") @db.Uuid
+  escalatedAt        DateTime  @default(now()) @map("escalated_at")
+
+  @@map("grievance_escalations")
+}
+
+// ── Shared News, Announcements & Governance ──────────────────────────────────
+
+model PoliticalRecord {
+  id                 String    @id @default(uuid())
+  name               String
+  office             String
+  officeLabel        String?   @map("office_label")
+  party              String?
+  partyShort         String?   @map("party_short")
+  jurisdiction       String    @default("STATE")
+  stateId            String?   @map("state_id")
+  state              State?    @relation(fields: [stateId], references: [id])
+  districtId         String?   @map("district_id")
+  district           District? @relation(fields: [districtId], references: [id])
+  constituencyType   String?   @map("constituency_type")
+  constituencyName   String?   @map("constituency_name")
+  department         String?
+  portfolio          String?
+  tenure             String?
+  officialSource     String?   @map("official_source")
+  sourceName         String?   @map("source_name")
+  effectiveDate      DateTime? @map("effective_date")
+  lastVerifiedAt     DateTime? @map("last_verified_at")
+  verificationStatus String    @default("VERIFIED") @map("verification_status")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  @@map("political_records")
+}
+
+model NewsArticle {
+  id              String   @id @default(uuid())
+  title           String
+  summary         String
+  body            String
+  publisher       String
+  sourceUrl       String   @map("source_url")
+  jurisdiction    String
+  category        String
+  publishedAt     DateTime @default(now()) @map("published_at")
+  isBreaking      Boolean  @default(false) @map("is_breaking")
+  readTimeMinutes Int      @default(2) @map("read_time_minutes")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@map("news_articles")
+}
+
+model Announcement {
+  id             String      @id @default(uuid())
+  title          String
+  body           String
+  category       String
+  departmentId   String?     @map("department_id")
+  department     Department? @relation(fields: [departmentId], references: [id])
+  publisher      String?
+  publishedAt    DateTime    @default(now()) @map("published_at")
+  isImportant    Boolean     @default(false) @map("is_important")
+  officialSource String?     @map("official_source")
+  sourceName     String?     @map("source_name")
+  naturalKey     String?     @unique @map("natural_key")
+  createdAt      DateTime    @default(now()) @map("created_at")
+
+  @@map("announcements")
+}
+
+model DataSource {
+  id             String    @id @default(uuid())
+  name           String
+  organization   String
+  url            String
+  trustTier      String    @default("OFFICIAL_PORTAL") @map("trust_tier")
+  syncFrequency  String    @default("DAILY") @map("sync_frequency")
+  lastSyncStatus String    @default("SUCCESS") @map("last_sync_status")
+  lastSyncAt     DateTime  @default(now()) @map("last_sync_at")
+
+  @@map("data_sources")
+}
+

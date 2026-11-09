@@ -1,0 +1,85 @@
+{
+  "generatedAt": "2025-11-03",
+  "description": "Real geographical boundary data for India (states/UTs) and Tamil Nadu (districts, assembly constituencies, parliamentary constituencies). All files are GeoJSON FeatureCollections (EPSG:4326 / WGS84, coordinates rounded to 1e-4 deg).",
+  "india-states": {
+    "file": "india-states.geojson",
+    "featureCount": 36,
+    "nameKey": "st_nm",
+    "sizeBytes": 94340,
+    "extraProps": ["st_code (Census 2011 state code, string e.g. '33' for Tamil Nadu)"],
+    "geometry": ["Polygon", "MultiPolygon"],
+    "source": "https://raw.githubusercontent.com/udit-001/india-maps-data/main/geojson/india.geojson (760 district features with st_nm/st_code, year=2011_c), dissolved by st_nm with mapshaper",
+    "notes": [
+      "36 states+UTs (28 states, 8 UTs) with CURRENT boundaries: Telangana and Ladakh present, Dadra and Nagar Haveli and Daman and Diu merged, Jammu and Kashmir as UT.",
+      "State names use current official spellings: Odisha (not Orissa), 'Andaman and Nicobar Islands', 'Jammu and Kashmir', 'Dadra and Nagar Haveli and Daman and Diu'.",
+      "Full-precision census boundaries, no simplification needed (94 KB)."
+    ],
+    "names": [
+      "Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chandigarh",
+      "Chhattisgarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Goa", "Gujarat", "Haryana",
+      "Himachal Pradesh", "Jammu and Kashmir", "Jharkhand", "Karnataka", "Kerala", "Ladakh", "Lakshadweep",
+      "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Puducherry",
+      "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand",
+      "West Bengal"
+    ]
+  },
+  "tamil-nadu-districts": {
+    "file": "tamil-nadu-districts.geojson",
+    "featureCount": 37,
+    "nameKey": "district",
+    "sizeBytes": 50443,
+    "extraProps": ["dt_code (Census district code, string)"],
+    "geometry": ["Polygon", "MultiPolygon"],
+    "source": "https://raw.githubusercontent.com/udit-001/india-maps-data/main/geojson/states/tamil-nadu.geojson (year=2011_c vintage, includes all 2019-2020 districts)",
+    "officialList38": ["Ariyalur", "Chengalpattu", "Chennai", "Coimbatore", "Cuddalore", "Dharmapuri", "Dindigul", "Erode", "Kallakurichi", "Kancheepuram", "Kanyakumari", "Karur", "Krishnagiri", "Madurai", "Mayiladuthurai", "Nagapattinam", "Namakkal", "Nilgiris", "Perambalur", "Pudukkottai", "Ramanathapuram", "Ranipet", "Salem", "Sivaganga", "Tenkasi", "Thanjavur", "Theni", "Thoothukudi", "Tiruchirappalli", "Tirunelveli", "Tirupathur", "Tiruppur", "Tiruvallur", "Tiruvannamalai", "Tiruvarur", "Vellore", "Viluppuram", "Virudhunagar"],
+    "names": ["Ariyalur", "Chengalpattu", "Chennai", "Coimbatore", "Cuddalore", "Dharmapuri", "Dindigul", "Erode", "Kallakurichi", "Kancheepuram", "Kanyakumari", "Karur", "Krishnagiri", "Madurai", "Nagapattinam", "Namakkal", "Nilgiris", "Perambalur", "Pudukkottai", "Ramanathapuram", "Ranipet", "Salem", "Sivaganga", "Tenkasi", "Thanjavur", "Theni", "Thiruvallur", "Thiruvarur", "Thoothukkudi", "Tiruchirappalli", "Tirunelveli", "Tirupathur", "Tiruppur", "Tiruvannamalai", "Vellore", "Viluppuram", "Virudhunagar"],
+    "namingVariants": {
+      "note": "source spellings differ from the official 38 list for 3 districts; match case-insensitively after removing non-letters",
+      "official -> actual-in-file": {
+        "Tiruvallur": "Thiruvallur",
+        "Tiruvarur": "Thiruvarur",
+        "Thoothukudi": "Thoothukkudi"
+      }
+    },
+    "missingVsOfficial38": ["Mayiladuthurai (created 28-Dec-2020 from Nagapattinam; NOT present in any open GeoJSON found — it remains merged inside the 'Nagapattinam' polygon)"],
+    "notes": [
+      "37/38 official districts present (all 2019-2020 reorganised districts incl. Chengalpattu, Ranipet, Tenkasi, Kallakurichi, Tirupathur are present and separate).",
+      "Only Mayiladuthurai is absent. If a Mayiladuthurai shape is required, it must be sourced separately (e.g. TN govt / Survey of India); Nagapattinam polygon currently covers that area.",
+      "No better open source found: datameet Census_2011 set has only 32 older districts; geoBoundaries ADM2 (735 feats) is Census-2011 vintage with no state attribute."
+    ]
+  },
+  "tamil-nadu-ac": {
+    "file": "tamil-nadu-ac.geojson",
+    "featureCount": 234,
+    "nameKey": "AC_NAME",
+    "sizeBytes": 421064,
+    "extraProps": ["AC_NO (assembly constituency number 1-234)", "PC_NAME (parent Lok Sabha constituency, UPPERCASE)", "PC_NO (1-39)"],
+    "geometry": ["Polygon", "MultiPolygon"],
+    "source": "https://raw.githubusercontent.com/datameet/maps/master/assembly-constituencies/India_AC.shp (ECI delimitation-based; STATUS field empty for TN => post-delimitation boundaries)",
+    "notes": [
+      "All 234 TN ACs present, AC_NO unique 1..234, every AC carries its parent PC (all 39 PCs referenced).",
+      "AC names include reservation tags e.g. 'Ponneri (SC)', spacing/style varies (e.g. 'Thiru-Vi-Ka-Nagar(SC)').",
+      "Boundaries are delimitation-era (2008); some shift vs current ground (datameet README notes 'some shift in the data').",
+      "PC_NAME uses ALL CAPS (e.g. 'TIRUVALLUR (SC)') and PC_NO for joining to tamil-nadu-pc.geojson."
+    ]
+  },
+  "tamil-nadu-pc": {
+    "file": "tamil-nadu-pc.geojson",
+    "featureCount": 39,
+    "nameKey": "pc_name",
+    "sizeBytes": 97209,
+    "extraProps": ["pc_no (parliamentary constituency number 1-39)", "st_name ('Tamil Nadu')"],
+    "geometry": ["MultiPolygon"],
+    "source": "https://raw.githubusercontent.com/datameet/maps/master/parliamentary-constituencies/india_pc_2019_simplified.geojson (543 all-India PCs, 2019 ECI-based, filtered st_code===33)",
+    "notes": [
+      "All 39 TN PCs present, pc_no 1..39 (matches ECI numbering; pc_no 1 = Thiruvallur, 39 = Kanyakumari).",
+      "Source spells PC 28 as 'Mayiladuturai' (official ECI spelling is 'Mayiladuthurai') and uses 'Thoothukudi', 'Thiruvallur', 'Thiruvarur'."
+    ],
+    "names": ["Thiruvallur", "Chennai North", "Chennai South", "Chennai Central", "Sriperumbudur", "Kancheepuram", "Arakkonam", "Vellore", "Krishnagiri", "Dharmapuri", "Tiruvannamalai", "Arani", "Viluppuram", "Kallakurichi", "Salem", "Namakkal", "Erode", "Tiruppur", "Nilgiris", "Coimbatore", "Pollachi", "Dindigul", "Karur", "Tiruchirappalli", "Perambalur", "Cuddalore", "Chidambaram", "Mayiladuturai", "Nagapattinam", "Thanjavur", "Sivaganga", "Madurai", "Theni", "Virudhunagar", "Ramanathapuram", "Thoothukudi", "Tenkasi", "Tirunelveli", "Kanyakumari"]
+  },
+  "joinKeys": {
+    "statesToDistricts": "tamil-nadu-districts.geojson has no st_nm, but every feature belongs to Tamil Nadu (st_code 33 in source); india-states 'st_nm' = 'Tamil Nadu'.",
+    "acToPc": "tamil-nadu-ac.geojson PC_NO === tamil-nadu-pc.geojson pc_no (1-39).",
+    "districtsToState": "Single-state file; join on constant 'Tamil Nadu'."
+  }
+}
