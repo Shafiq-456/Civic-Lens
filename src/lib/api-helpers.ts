@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 import { db } from '@/lib/db'
 import type { PrismaClient } from '@prisma/client'
 
