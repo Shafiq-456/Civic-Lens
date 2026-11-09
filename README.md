@@ -119,8 +119,9 @@ npm install
 ### 2. Configure Environment Variables
 Create or verify your `.env` file in the project root:
 ```env
-# Database connection (SQLite relative to prisma schema)
-DATABASE_URL="file:../db/custom.db"
+# Supabase Postgres — transaction pooler (runtime) and session pooler (schema pushes)
+DATABASE_URL="postgresql://postgres.<project-ref>:<db-password>@aws-0-<region>.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1"
+DIRECT_URL="postgresql://postgres.<project-ref>:<db-password>@aws-0-<region>.pooler.supabase.com:5432/postgres"
 
 # AI Chatbot Configuration (Provide ANY of the following):
 GROQ_API_KEY=gsk_your_groq_api_key_here
@@ -130,10 +131,10 @@ GROQ_API_KEY=gsk_your_groq_api_key_here
 
 ### 3. Initialize Database & Generate Prisma Client
 ```bash
-npx prisma generate
+npm run db:prepare   # creates the tables in Supabase and seeds them if the database is empty
 ```
 
-*(Note: The demonstration SQLite database `db/custom.db` comes pre-seeded with 234 assembly seats, 39 parliamentary seats, 38 districts, schemes, projects, and leadership records).*
+*(Note: the seed loads 234 assembly seats, 39 parliamentary seats, 38 districts, schemes, projects, and leadership records. `npm run build` runs the same step automatically on every deploy, and never re-seeds a database that already has data).*
 
 ### 4. Run Development Server
 ```bash

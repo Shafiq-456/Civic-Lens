@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 import { db } from '@/lib/db'
+import { SampleDataReadOnlyError } from '@/lib/sample-db'
 import type { PrismaClient } from '@prisma/client'
 
 export function ok<T>(data: T, init?: number) {
@@ -40,6 +41,9 @@ export async function audit(entry: {
 }
 
 export function handleError(e: unknown, scope: string) {
+  if (e instanceof SampleDataReadOnlyError) {
+    return NextResponse.json({ error: e.message, sampleData: true }, { status: 503 })
+  }
   console.error(`[${scope}]`, e)
   return NextResponse.json({ error: 'Internal error in ' + scope }, { status: 500 })
 }

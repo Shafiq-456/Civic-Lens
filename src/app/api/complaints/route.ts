@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
         ...(status ? { status } : {}),
         ...(category ? { category } : {}),
         ...(districtId ? { districtId } : {}),
-        ...(q ? { OR: [{ title: { contains: q } }, { ticketNo: { contains: q } }] } : {}),
+        ...(q ? { OR: [{ title: { contains: q, mode: 'insensitive' } }, { ticketNo: { contains: q, mode: 'insensitive' } }] } : {}),
       },
       include: {
         district: { select: { name: true } },
