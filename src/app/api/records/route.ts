@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { db } from '@/lib/db'
-import { handleError, ok, bad } from '@/lib/api-helpers'
+import { handleError, ok, bad, getServerVerifiedIdentity, audit } from '@/lib/api-helpers'
 
 export const dynamic = 'force-dynamic'
 
@@ -53,6 +53,12 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    // Verified server-side authentication check
+    const identity = await getServerVerifiedIdentity(req)
+    if (!identity.isAuthenticated || (!identity.isAdmin && !identity.isOfficer)) {
+      return bad('Unauthorized: Administrator or officer credentials required to create records', 403)
+    }
+
     const body = await req.json()
     if (!body?.name || !body?.office) return bad('name and office are required')
     const rec = await db.politicalRecord.create({
@@ -80,9 +86,17 @@ export async function POST(req: NextRequest) {
     await db.verificationLog.create({
       data: {
         recordId: rec.id, action: 'CREATED', newStatus: rec.status,
-        sourceUrl: rec.officialSource, verifiedBy: body.actor ?? 'admin',
+        sourceUrl: rec.officialSource, verifiedBy: identity.username,
         note: 'Record created via administration portal.',
       },
+    })
+    await audit({
+      actor: identity.username,
+      actorRole: identity.role,
+      action: 'CREATE_RECORD',
+      entity: 'POLITICAL_RECORD',
+      entityId: rec.id,
+      summary: `Created political record "${rec.name}" (${rec.office}).`,
     })
     return ok({ record: rec }, 201)
   } catch (e) {

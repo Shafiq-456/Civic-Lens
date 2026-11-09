@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { db } from '@/lib/db'
-import { handleError, ok, bad } from '@/lib/api-helpers'
+import { handleError, ok, bad, getServerVerifiedIdentity, audit } from '@/lib/api-helpers'
 
 export const dynamic = 'force-dynamic'
 
@@ -95,6 +95,12 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    // Verified server-side authentication check
+    const identity = await getServerVerifiedIdentity(req)
+    if (!identity.isAuthenticated || (!identity.isAdmin && !identity.isOfficer)) {
+      return bad('Unauthorized: Administrator or officer credentials required to trigger source synchronization', 403)
+    }
+
     const body = await req.json().catch(() => ({}))
     const sourceKey = typeof body?.sourceKey === 'string' && body.sourceKey ? body.sourceKey : null
     const triggeredBy = body?.triggeredBy === 'MANUAL_ADMIN' ? 'MANUAL_ADMIN' : 'SCHEDULED'
@@ -171,12 +177,12 @@ export async function POST(req: NextRequest) {
 
     await db.auditLog.create({
       data: {
-        actor: 'sync-engine',
-        actorRole: 'SYSTEM',
+        actor: identity.username || 'sync-engine',
+        actorRole: identity.role || 'SYSTEM',
         action: 'SYNC_RUN',
         entity: 'DATA_SOURCE',
         entityId: runId,
-        summary: `Source verification pass: ${succeeded} reachable, ${failed} failed, ${skipped} skipped. No content changes applied (preservation-first design).`,
+        summary: `Source verification pass triggered by ${identity.username}: ${succeeded} reachable, ${failed} failed, ${skipped} skipped. No content changes applied (preservation-first design).`,
         ipAddress: null,
       },
     })

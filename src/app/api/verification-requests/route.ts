@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { db } from '@/lib/db'
-import { audit, handleError, ok, bad } from '@/lib/api-helpers'
+import { audit, handleError, ok, bad, getServerVerifiedIdentity } from '@/lib/api-helpers'
 
 export const dynamic = 'force-dynamic'
 
@@ -38,19 +38,25 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
+    // Verified server-side authentication check
+    const identity = await getServerVerifiedIdentity(req)
+    if (!identity.isAuthenticated || (!identity.isAdmin && !identity.isOfficer)) {
+      return bad('Unauthorized: Administrator or officer credentials required to process verification requests', 403)
+    }
+
     const body = await req.json()
-    const { requestNo, decision, remarks, actor } = body ?? {}
+    const { requestNo, decision, remarks } = body ?? {}
     if (!requestNo || !['APPROVED', 'REJECTED'].includes(decision)) {
-      return ok({ error: 'requestNo and decision (APPROVED|REJECTED) required' }, 400)
+      return bad('requestNo and decision (APPROVED|REJECTED) required')
     }
     const existing = await db.citizenVerificationRequest.findUnique({ where: { requestNo } })
-    if (!existing) return ok({ error: 'Request not found' }, 404)
+    if (!existing) return bad('Request not found', 404)
     const request = await db.citizenVerificationRequest.update({
       where: { requestNo },
       data: { status: decision, remarks: remarks ?? existing.remarks, processedAt: new Date() },
     })
     await audit({
-      actor: actor ?? 'admin', actorRole: 'ADMIN', action: decision === 'APPROVED' ? 'APPROVE_VERIFICATION' : 'REJECT_VERIFICATION',
+      actor: identity.username, actorRole: identity.role, action: decision === 'APPROVED' ? 'APPROVE_VERIFICATION' : 'REJECT_VERIFICATION',
       entity: 'CITIZEN_VERIFICATION', entityId: requestNo,
       summary: `Verification request ${requestNo} ${decision.toLowerCase()}.`, details: remarks ?? null,
     })

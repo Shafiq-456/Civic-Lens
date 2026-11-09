@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { db } from '@/lib/db'
-import { audit, handleError, ok, bad } from '@/lib/api-helpers'
+import { audit, handleError, ok, bad, getServerVerifiedIdentity } from '@/lib/api-helpers'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,8 +16,8 @@ const FLOW: Record<string, string> = {
 export async function GET(req: NextRequest, ctx: { params: Promise<{ ticketNo: string }> }) {
   try {
     const { ticketNo } = await ctx.params
-    const sp = req.nextUrl.searchParams
-    const isAdminView = sp.get('admin') === 'true'
+    const identity = await getServerVerifiedIdentity(req)
+    const isAdminView = identity.isAdmin || identity.isVigilance || (identity.isOfficer && !!identity.departmentId)
 
     const complaint = await db.complaint.findUnique({
       where: { ticketNo },
@@ -58,20 +58,26 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ ticketNo:
     const nextStatus = FLOW[action]
     if (!nextStatus) return bad('Unknown workflow action')
 
-    const actor = body?.actor ?? 'officer'
-    const actorRole = body?.actorRole ?? 'DEPT_OFFICER'
+    // Trusted server-side identity verification
+    const identity = await getServerVerifiedIdentity(req)
+    
+    // Determine effective actor and role from database-backed identity
+    const actor = identity.isAuthenticated ? identity.username : (body?.actor ?? 'anonymous_citizen')
+    const actorRole = identity.isAuthenticated ? identity.role : 'CITIZEN'
 
-    // Role-based protection: Citizens can only post comments, never alter official status
-    if (actorRole === 'CITIZEN' && action !== 'COMMENT') {
-      return bad('Unauthorized: Citizens can only submit comments, not modify official complaint status', 403)
+    // Role-based protection: Unauthenticated users / citizens can only post comments
+    if (actorRole === 'CITIZEN' || actorRole === 'PUBLIC') {
+      if (action !== 'COMMENT') {
+        return bad('Unauthorized: Citizens can only submit comments, not modify official complaint status', 403)
+      }
     }
 
     const complaint = await db.complaint.findUnique({ where: { ticketNo } })
     if (!complaint) return bad('Complaint not found', 404)
 
-    // Department isolation: If officer is acting, prevent modifying complaints outside assigned department
-    if (actorRole === 'DEPT_OFFICER' && body?.officerDepartmentId && complaint.assignedDepartmentId) {
-      if (body.officerDepartmentId !== complaint.assignedDepartmentId) {
+    // Department isolation: If officer is acting, prevent modifying complaints outside their assigned department
+    if (identity.isOfficer && !identity.isAdmin && identity.departmentId && complaint.assignedDepartmentId) {
+      if (identity.departmentId !== complaint.assignedDepartmentId) {
         return bad('Department isolation: Officers cannot modify complaints outside their assigned department', 403)
       }
     }
@@ -82,8 +88,8 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ ticketNo:
       where: { ticketNo },
       data: {
         status: nextStatus === 'COMMENT' ? complaint.status : nextStatus,
-        assignedDepartmentId: body?.departmentId ?? complaint.assignedDepartmentId,
-        assignedTo: body?.assignedTo ?? complaint.assignedTo,
+        assignedDepartmentId: (identity.isAdmin || identity.isOfficer) ? (body?.departmentId ?? complaint.assignedDepartmentId) : complaint.assignedDepartmentId,
+        assignedTo: (identity.isAdmin || identity.isOfficer) ? (body?.assignedTo ?? complaint.assignedTo) : complaint.assignedTo,
         resolutionNote: action === 'RESOLVE' ? (note || complaint.resolutionNote) : complaint.resolutionNote,
       },
       include: { district: { select: { name: true } }, assignedDepartment: { select: { name: true, shortName: true } } },

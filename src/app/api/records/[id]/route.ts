@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { db } from '@/lib/db'
-import { audit, handleError, ok, bad } from '@/lib/api-helpers'
+import { audit, handleError, ok, bad, getServerVerifiedIdentity } from '@/lib/api-helpers'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,10 +11,16 @@ export const dynamic = 'force-dynamic'
 export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await ctx.params
+    // Server-side identity verification
+    const identity = await getServerVerifiedIdentity(req)
+    if (!identity.isAuthenticated || (!identity.isAdmin && !identity.isOfficer)) {
+      return bad('Unauthorized: Administrator or officer credentials required to modify records', 403)
+    }
+
     const body = await req.json()
     const action: string = body?.action
-    const actor: string = body?.actor ?? 'admin'
-    const actorRole: string = body?.actorRole ?? 'ADMIN'
+    const actor: string = identity.username
+    const actorRole: string = identity.role
 
     const existing = await db.politicalRecord.findUnique({ where: { id } })
     if (!existing) return bad('Record not found', 404)

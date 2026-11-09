@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { db } from '@/lib/db'
-import { audit, handleError, ok, bad } from '@/lib/api-helpers'
+import { audit, handleError, ok, bad, getServerVerifiedIdentity } from '@/lib/api-helpers'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,7 +15,10 @@ export async function GET(req: NextRequest) {
     const districtId = sp.get('districtId') ?? undefined
     const q = sp.get('q')?.trim()
     const take = Math.min(Number(sp.get('take') ?? 100), 200)
-    const isAdminView = sp.get('admin') === 'true'
+
+    // Security check: Verify admin access via trusted server-side identity
+    const identity = await getServerVerifiedIdentity(req)
+    const isAdminView = identity.isAdmin || identity.isVigilance
 
     const complaints = await db.complaint.findMany({
       where: {
