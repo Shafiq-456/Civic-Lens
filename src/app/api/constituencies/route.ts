@@ -38,14 +38,14 @@ export async function GET(req: NextRequest) {
     if (pc) where.parentNo = Number(pc)
     if (party) where.holderPartyShort = party
     if (status) where.holderStatus = status
-    if (district) where.district = { is: { name: { contains: district } } }
+    if (district) where.district = { is: { name: { contains: district, mode: 'insensitive' } } }
     if (q) {
       where.OR = [
-        { name: { contains: q } },
-        { holderName: { contains: q } },
-        { holderParty: { contains: q } },
-        { holderPartyShort: { contains: q } },
-        { district: { is: { name: { contains: q } } } },
+        { name: { contains: q, mode: 'insensitive' } },
+        { holderName: { contains: q, mode: 'insensitive' } },
+        { holderParty: { contains: q, mode: 'insensitive' } },
+        { holderPartyShort: { contains: q, mode: 'insensitive' } },
+        { district: { is: { name: { contains: q, mode: 'insensitive' } } } },
       ]
     }
 

@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     const schemes = await db.scheme.findMany({
       where: {
         ...(departmentId ? { departmentId } : {}),
-        ...(q ? { OR: [{ name: { contains: q } }, { description: { contains: q } }] } : {}),
+        ...(q ? { OR: [{ name: { contains: q, mode: 'insensitive' } }, { description: { contains: q, mode: 'insensitive' } }] } : {}),
       },
       include: { department: { select: { name: true, shortName: true } } },
       orderBy: { launchDate: 'desc' },
