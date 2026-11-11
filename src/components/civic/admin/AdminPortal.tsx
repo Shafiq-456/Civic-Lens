@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { LayoutDashboard, Landmark, LogOut, MessageSquareWarning, ScrollText, ShieldCheck, UserCheck } from 'lucide-react'
+import { LayoutDashboard, Landmark, LogOut, MessageSquareWarning, ScrollText, ShieldCheck, UserCheck, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { GenericChip } from '@/components/civic/VerificationBadge'
@@ -15,6 +15,7 @@ import { ComplaintsTab } from './ComplaintsTab'
 import { DashboardTab } from './DashboardTab'
 import { MonitoringTab } from './MonitoringTab'
 import { RecordsVerificationTab } from './RecordsVerificationTab'
+import { IntelligenceTab } from './IntelligenceTab'
 import { ROLE_TONE, roleLabel, type AdminTab } from './admin-shared'
 
 const STORAGE_KEY = 'civic-lenz-user'
@@ -165,6 +166,11 @@ export default function AdminPortal() {
             <span className="hidden sm:inline">Audit Trail</span>
             <span className="sm:hidden">Audit</span>
           </TabsTrigger>
+          <TabsTrigger value="intelligence" className="flex-none px-3 py-1.5 text-xs sm:text-sm">
+            <Sparkles className="h-3.5 w-3.5 text-indigo-600" aria-hidden />
+            <span className="hidden sm:inline">Intelligence Stream</span>
+            <span className="sm:hidden">Intel</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard">
@@ -184,6 +190,9 @@ export default function AdminPortal() {
         </TabsContent>
         <TabsContent value="audit">
           <AuditTrailTab />
+        </TabsContent>
+        <TabsContent value="intelligence">
+          <IntelligenceTab user={user} canEdit={canEdit} />
         </TabsContent>
       </Tabs>
     </section>

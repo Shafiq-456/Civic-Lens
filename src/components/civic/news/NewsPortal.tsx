@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import {
   Newspaper,
   Globe,
@@ -17,321 +17,432 @@ import {
   CheckCircle2,
   X,
   Share2,
+  Languages,
+  Clock,
+  FileCheck,
+  Sparkles,
+  Info
 } from 'lucide-react'
-import { GOVERNMENT_NEWS, type NewsItem } from '@/lib/civic/news-data'
+import { useApi } from '@/lib/civic/api'
+import { RealtimeNewsItem } from '@/lib/civic/realtime-news-data'
+import { formatDate, relativeTime } from '@/lib/civic/format'
+import { GenericChip } from '@/components/civic/VerificationBadge'
+import { Loading, ErrorState, EmptyState } from '@/components/civic/ui-bits'
 
-const CATEGORY_META: Record<NewsItem['category'], { label: string; badge: string }> = {
-  POLICY: { label: 'Policy & Cabinet', badge: 'bg-purple-50 text-purple-700 border-purple-200' },
-  INFRASTRUCTURE: { label: 'Infrastructure', badge: 'bg-blue-50 text-blue-700 border-blue-200' },
-  WELFARE: { label: 'Welfare & Social Justice', badge: 'bg-teal-50 text-teal-700 border-teal-200' },
-  AGRICULTURE: { label: 'Agriculture & Irrigation', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-  HEALTH: { label: 'Public Health', badge: 'bg-rose-50 text-rose-700 border-rose-200' },
-  GOVERNANCE: { label: 'Public Administration', badge: 'bg-amber-50 text-amber-700 border-amber-200' },
+interface NewsApiResponse {
+  news: RealtimeNewsItem[]
+  total: number
+  sourcesMonitored: string[]
+  lastCollectedAt: string
 }
 
+const CATEGORY_META: Record<string, { label: string; badge: string }> = {
+  ALL: { label: 'All Categories', badge: 'bg-slate-100 text-slate-700' },
+  POLICY: { label: 'Policy & Cabinet', badge: 'bg-purple-50 text-purple-700 border-purple-200' },
+  INFRASTRUCTURE: { label: 'Infrastructure', badge: 'bg-blue-50 text-blue-700 border-blue-200' },
+  WELFARE: { label: 'Welfare & Benefits', badge: 'bg-teal-50 text-teal-700 border-teal-200' },
+  AGRICULTURE: { label: 'Agriculture & Delta', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  HEALTH: { label: 'Public Health', badge: 'bg-rose-50 text-rose-700 border-rose-200' },
+  GOVERNANCE: { label: 'Administration & Monsoon', badge: 'bg-amber-50 text-amber-700 border-amber-200' },
+  RECRUITMENT: { label: 'TNPSC & Recruitment', badge: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
+  EDUCATION: { label: 'Higher & School Edu', badge: 'bg-cyan-50 text-cyan-700 border-cyan-200' }
+}
+
+const TN_DISTRICTS = [
+  'ALL',
+  'Ariyalur', 'Chengalpattu', 'Chennai', 'Coimbatore', 'Cuddalore',
+  'Dharmapuri', 'Dindigul', 'Erode', 'Kallakurichi', 'Kancheepuram',
+  'Kanyakumari', 'Karur', 'Krishnagiri', 'Madurai', 'Mayiladuthurai',
+  'Nagapattinam', 'Namakkal', 'Nilgiris', 'Perambalur', 'Pudukkottai',
+  'Ramanathapuram', 'Ranipet', 'Salem', 'Sivaganga', 'Tenkasi',
+  'Thanjavur', 'Theni', 'Thoothukudi', 'Tiruchirappalli', 'Tirunelveli',
+  'Tirupathur', 'Tiruppur', 'Tiruvallur', 'Tiruvannamalai', 'Tiruvarur',
+  'Vellore', 'Viluppuram', 'Virudhunagar'
+]
+
 export default function NewsPortal() {
+  const [lang, setLang] = useState<'EN' | 'TA'>('EN')
   const [jurisdictionFilter, setJurisdictionFilter] = useState<'ALL' | 'TN' | 'INDIA'>('ALL')
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL')
+  const [districtFilter, setDistrictFilter] = useState<string>('ALL')
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedArticle, setSelectedArticle] = useState<NewsItem | null>(null)
+  const [selectedArticle, setSelectedArticle] = useState<RealtimeNewsItem | null>(null)
 
-  const filteredNews = useMemo(() => {
-    return GOVERNMENT_NEWS.filter((item) => {
-      const matchJur = jurisdictionFilter === 'ALL' || item.jurisdiction === jurisdictionFilter
-      const matchCat = categoryFilter === 'ALL' || item.category === categoryFilter
-      const q = searchQuery.toLowerCase().trim()
-      const matchSearch =
-        !q ||
-        item.title.toLowerCase().includes(q) ||
-        item.summary.toLowerCase().includes(q) ||
-        item.content.toLowerCase().includes(q) ||
-        item.tags.some((t) => t.toLowerCase().includes(q))
-      return matchJur && matchCat && matchSearch
-    })
-  }, [jurisdictionFilter, categoryFilter, searchQuery])
+  // Live API query with automatic polling refresh
+  const apiPath = useMemo(() => {
+    const p = new URLSearchParams()
+    if (jurisdictionFilter !== 'ALL') p.set('jurisdiction', jurisdictionFilter)
+    if (categoryFilter !== 'ALL') p.set('category', categoryFilter)
+    if (districtFilter !== 'ALL') p.set('district', districtFilter)
+    if (searchQuery.trim()) p.set('q', searchQuery.trim())
+    return `/api/news?${p.toString()}`
+  }, [jurisdictionFilter, categoryFilter, districtFilter, searchQuery])
 
-  const featuredItems = useMemo(() => GOVERNMENT_NEWS.filter((n) => n.isFeatured), [])
+  const { data, loading, error, refresh } = useApi<NewsApiResponse>(apiPath)
+
+  // Auto-refresh news feed every 60 seconds
+  useEffect(() => {
+    const timer = setInterval(() => refresh(), 60000)
+    return () => clearInterval(timer)
+  }, [refresh])
+
+  const newsItems = data?.news || []
+  const breakingNews = useMemo(() => newsItems.filter((n) => n.isBreaking), [newsItems])
+  const featuredArticles = useMemo(() => newsItems.filter((n) => n.isFeatured), [newsItems])
 
   return (
     <div className="space-y-6">
-      {/* Top Banner / Hero */}
+      {/* Real-time Hero Banner */}
       <div className="rounded-2xl border border-indigo-200 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 text-white shadow-md">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-indigo-400/30 bg-indigo-500/20 px-3 py-1 text-xs font-semibold text-indigo-200 backdrop-blur-xs">
-              <Newspaper className="h-3.5 w-3.5" />
-              Official Gazette & Public Information Feed
+            <div className="flex items-center gap-2">
+              <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">
+                Official Live Intelligence Stream
+              </span>
+              <span className="rounded bg-indigo-500/20 px-2 py-0.5 text-[11px] font-medium text-indigo-200">
+                Tamil Nadu DIPR & PIB Monitored
+              </span>
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
-              Government News & Public Information
-            </h1>
+            <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+              {lang === 'EN' ? 'Tamil Nadu Government News & Briefings' : 'தமிழ்நாடு அரசு செய்திகள் & அதிகாரப்பூர்வ அறிவிப்புகள்'}
+            </h2>
             <p className="max-w-2xl text-sm text-slate-300">
-              Verified press releases, cabinet decisions, policy notifications, and civic developments from the
-              Government of India and the Government of Tamil Nadu.
+              {lang === 'EN'
+                ? 'Directly collected from official gazettes, department releases, and district collectorates. Preserving official source evidence.'
+                : 'அரசிதழ், அரசுத் துறைகள் மற்றும் மாவட்ட ஆட்சியர் அறிவிப்புகளிலிருந்து நேரடியாக பெறப்பட்ட சரிபார்க்கப்பட்ட தகவல்கள்.'}
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800/80 px-3 py-2 text-xs font-medium text-slate-200">
-              <Globe className="h-4 w-4 text-indigo-400" />
-              National & State Coverage
-            </span>
+          {/* Language Switcher Pill */}
+          <div className="flex items-center gap-2 self-start sm:self-center">
+            <button
+              type="button"
+              onClick={() => setLang('EN')}
+              className={`flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition ${
+                lang === 'EN' ? 'bg-white text-slate-900 shadow' : 'bg-white/10 text-white hover:bg-white/20'
+              }`}
+            >
+              <Languages className="h-3.5 w-3.5" />
+              English
+            </button>
+            <button
+              type="button"
+              onClick={() => setLang('TA')}
+              className={`flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition ${
+                lang === 'TA' ? 'bg-amber-400 text-slate-950 shadow' : 'bg-white/10 text-white hover:bg-white/20'
+              }`}
+            >
+              <Languages className="h-3.5 w-3.5" />
+              தமிழ் (Tamil)
+            </button>
           </div>
         </div>
 
-        {/* Featured Headlines Section */}
-        {featuredItems.length > 0 && (
-          <div className="mt-6 border-t border-slate-800 pt-5">
-            <div className="flex items-center gap-2 text-xs font-semibold text-amber-400 uppercase tracking-wider mb-3">
-              <Flame className="h-4 w-4" />
-              Featured Key Developments
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {featuredItems.map((feat) => (
-                <div
-                  key={feat.id}
-                  onClick={() => setSelectedArticle(feat)}
-                  className="group cursor-pointer rounded-xl border border-slate-800 bg-slate-800/60 p-4 transition-all hover:border-indigo-400 hover:bg-slate-800"
-                >
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                        feat.jurisdiction === 'TN' ? 'bg-teal-900/80 text-teal-300' : 'bg-indigo-900/80 text-indigo-300'
-                      }`}
-                    >
-                      {feat.jurisdiction === 'TN' ? 'Tamil Nadu' : 'Govt of India'}
-                    </span>
-                    <span className="text-[11px] text-slate-400">
-                      {new Date(feat.publishedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-                    </span>
-                  </div>
-                  <h3 className="mt-2 text-sm font-semibold text-white group-hover:text-indigo-300 line-clamp-2">
-                    {feat.title}
-                  </h3>
-                  <p className="mt-1 text-xs text-slate-400 line-clamp-2">{feat.summary}</p>
-                </div>
-              ))}
-            </div>
+        {/* Breaking News Ticker */}
+        {breakingNews.length > 0 && (
+          <div className="mt-4 flex items-center gap-3 rounded-xl border border-rose-500/30 bg-rose-950/40 px-3.5 py-2 text-xs">
+            <span className="flex items-center gap-1 font-bold text-rose-400 uppercase tracking-wide">
+              <Flame className="h-3.5 w-3.5 fill-rose-400" />
+              Breaking
+            </span>
+            <div className="h-4 w-px bg-rose-500/30" />
+            <p className="truncate text-slate-200">
+              {lang === 'EN' ? breakingNews[0].title : breakingNews[0].titleTa}
+            </p>
+            {breakingNews[0].goReference && (
+              <span className="hidden md:inline rounded bg-rose-500/20 px-2 py-0.5 text-[10px] text-rose-200">
+                {breakingNews[0].goReference}
+              </span>
+            )}
           </div>
         )}
       </div>
 
-      {/* Control and Filter Bar */}
-      <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-xs lg:flex-row lg:items-center lg:justify-between">
-        {/* Jurisdiction Filter Tabs */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0">
-          {(['ALL', 'TN', 'INDIA'] as const).map((jur) => (
+      {/* Filter and Search Bar */}
+      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm space-y-3">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={lang === 'EN' ? 'Search verified headlines, G.O. numbers, schemes or keywords...' : 'செய்திகள், அரசாணை எண்கள், திட்டங்கள் தேடுக...'}
+              className="w-full rounded-lg border border-slate-200 bg-slate-50/50 py-2 pl-9 pr-4 text-sm text-slate-800 placeholder-slate-400 focus:border-indigo-600 focus:bg-white focus:outline-none"
+            />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Jurisdiction selector */}
+            <div className="flex rounded-lg border border-slate-200 p-0.5 text-xs font-medium">
+              <button
+                type="button"
+                onClick={() => setJurisdictionFilter('ALL')}
+                className={`rounded px-2.5 py-1 transition ${
+                  jurisdictionFilter === 'ALL' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                All
+              </button>
+              <button
+                type="button"
+                onClick={() => setJurisdictionFilter('TN')}
+                className={`rounded px-2.5 py-1 transition ${
+                  jurisdictionFilter === 'TN' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Tamil Nadu
+              </button>
+              <button
+                type="button"
+                onClick={() => setJurisdictionFilter('INDIA')}
+                className={`rounded px-2.5 py-1 transition ${
+                  jurisdictionFilter === 'INDIA' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Union / Central
+              </button>
+            </div>
+
+            {/* 38 District Filter Dropdown */}
+            <select
+              value={districtFilter}
+              onChange={(e) => setDistrictFilter(e.target.value)}
+              aria-label="Filter by district"
+              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            >
+              <option value="ALL">All 38 Districts</option>
+              {TN_DISTRICTS.filter((d) => d !== 'ALL').map((dist) => (
+                <option key={dist} value={dist}>
+                  {dist}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Category Filter Pills */}
+        <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-slate-100">
+          <span className="text-xs text-slate-400 mr-1 flex items-center gap-1">
+            <Filter className="h-3 w-3" /> Filter:
+          </span>
+          {Object.entries(CATEGORY_META).map(([key, meta]) => (
             <button
-              key={jur}
-              onClick={() => setJurisdictionFilter(jur)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
-                jurisdictionFilter === jur
-                  ? 'bg-slate-900 text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+              key={key}
+              type="button"
+              onClick={() => setCategoryFilter(key)}
+              className={`rounded-full px-2.5 py-1 text-xs font-medium transition ${
+                categoryFilter === key
+                  ? 'bg-slate-900 text-white'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
-              {jur === 'ALL'
-                ? 'All News'
-                : jur === 'TN'
-                ? '🏛️ Tamil Nadu Government'
-                : '🇮🇳 Government of India'}
+              {meta.label}
             </button>
           ))}
         </div>
-
-        {/* Category Pill and Search */}
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-700 focus:border-indigo-600 focus:bg-white focus:outline-hidden"
-          >
-            <option value="ALL">All Categories</option>
-            <option value="POLICY">Policy & Cabinet</option>
-            <option value="INFRASTRUCTURE">Infrastructure</option>
-            <option value="WELFARE">Welfare & Social Justice</option>
-            <option value="AGRICULTURE">Agriculture & Irrigation</option>
-            <option value="HEALTH">Public Health</option>
-            <option value="GOVERNANCE">Public Administration</option>
-          </select>
-
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search news, topics..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 bg-slate-50 py-1.5 pl-8 pr-3 text-xs text-slate-800 placeholder-slate-400 focus:border-indigo-600 focus:bg-white focus:outline-hidden"
-            />
-          </div>
-        </div>
       </div>
 
-      {/* News Articles Feed */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredNews.length === 0 ? (
-          <div className="col-span-full rounded-xl border border-dashed border-slate-300 p-12 text-center text-sm text-slate-500">
-            No news articles match your filter criteria. Try resetting the filters.
-          </div>
-        ) : (
-          filteredNews.map((article) => {
-            const cat = CATEGORY_META[article.category]
+      {/* Main Grid: Articles Listing & Detail Modal */}
+      {loading ? (
+        <Loading label="Fetching real-time government news stream..." />
+      ) : error ? (
+        <ErrorState message={error} />
+      ) : newsItems.length === 0 ? (
+        <EmptyState
+          title="No government news matched"
+          hint="Try adjusting your search criteria, category filters, or select 'All 38 Districts'."
+        />
+      ) : (
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {newsItems.map((article) => {
+            const cat = CATEGORY_META[article.category] || CATEGORY_META.ALL
+            const title = lang === 'TA' ? article.titleTa : article.title
+            const summary = lang === 'TA' ? article.summaryTa : article.summary
+
             return (
               <div
                 key={article.id}
-                onClick={() => setSelectedArticle(article)}
-                className="group flex flex-col justify-between cursor-pointer rounded-2xl border border-slate-200 bg-white p-5 shadow-xs transition-all hover:-translate-y-0.5 hover:border-indigo-300 hover:shadow-md"
+                className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-indigo-300 hover:shadow-md"
               >
-                <div>
-                  {/* Card Header Chips */}
-                  <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
-                    <span
-                      className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                        article.jurisdiction === 'TN'
-                          ? 'border border-teal-200 bg-teal-50 text-teal-800'
-                          : 'border border-indigo-200 bg-indigo-50 text-indigo-800'
-                      }`}
-                    >
-                      {article.jurisdiction === 'TN' ? 'Tamil Nadu' : 'Govt of India'}
-                    </span>
-                    <span className="flex items-center gap-1 text-[11px] text-slate-500">
-                      <Calendar className="h-3 w-3" />
-                      {new Date(article.publishedAt).toLocaleDateString('en-IN', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      })}
-                    </span>
-                  </div>
-
-                  {/* Category Pill */}
-                  <div className="mt-3">
-                    <span className={`inline-block rounded-md border px-2 py-0.5 text-[10px] font-medium ${cat.badge}`}>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={`rounded-md border px-2 py-0.5 text-[11px] font-medium ${cat.badge}`}>
                       {cat.label}
                     </span>
+                    <span className="flex items-center gap-1 text-[11px] text-slate-400">
+                      <Clock className="h-3 w-3" />
+                      {relativeTime(article.publishedAt)}
+                    </span>
                   </div>
 
-                  {/* Headline */}
-                  <h2 className="mt-2 text-sm font-bold text-slate-900 group-hover:text-indigo-800 sm:text-base line-clamp-2">
-                    {article.title}
-                  </h2>
+                  <h3 className="line-clamp-2 text-base font-semibold leading-snug text-slate-900">
+                    {title}
+                  </h3>
 
-                  {/* Summary */}
-                  <p className="mt-2 text-xs leading-relaxed text-slate-600 line-clamp-3">
-                    {article.summary}
+                  <p className="line-clamp-3 text-xs leading-relaxed text-slate-600">
+                    {summary}
                   </p>
+
+                  {/* Key Fact Highlight */}
+                  {article.keyFacts && (article.keyFacts.outlay || article.keyFacts.beneficiaries) && (
+                    <div className="rounded-lg bg-slate-50 p-2.5 text-[11px] text-slate-700 border border-slate-100 space-y-1">
+                      {article.keyFacts.outlay && (
+                        <p>
+                          <strong className="text-slate-900">Sanctioned Outlay:</strong> {article.keyFacts.outlay}
+                        </p>
+                      )}
+                      {article.keyFacts.beneficiaries && (
+                        <p>
+                          <strong className="text-slate-900">Beneficiary Group:</strong> {article.keyFacts.beneficiaries}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* District / G.O. Badge */}
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {article.district ? (
+                      <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-800 border border-amber-200">
+                        <MapPin className="h-2.5 w-2.5" />
+                        {article.district}
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">
+                        Statewide / All TN
+                      </span>
+                    )}
+
+                    {article.goReference && (
+                      <span className="inline-flex items-center gap-1 rounded bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700 border border-blue-200">
+                        <FileCheck className="h-2.5 w-2.5" />
+                        {article.goReference}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
-                {/* Footer Section */}
-                <div className="mt-4 pt-3 border-t border-slate-100">
-                  <div className="flex items-center justify-between text-xs text-slate-500">
-                    <span className="line-clamp-1 text-[11px] font-medium text-slate-600">
-                      {article.sourceName}
-                    </span>
-                    <span className="shrink-0 flex items-center gap-1 text-indigo-700 font-semibold text-[11px] group-hover:underline">
-                      Read full <ArrowRight className="h-3 w-3" />
-                    </span>
+                <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-1 text-teal-700 font-medium">
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                    <span className="text-[11px]">Official Source</span>
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedArticle(article)}
+                    className="inline-flex items-center gap-1 font-semibold text-indigo-600 hover:text-indigo-800"
+                  >
+                    View Details
+                    <ArrowRight className="h-3 w-3" />
+                  </button>
                 </div>
               </div>
             )
-          })
-        )}
-      </div>
+          })}
+        </div>
+      )}
 
-      {/* Modal Dialog for Full Article */}
+      {/* Modal: Full Article Intelligence View */}
       {selectedArticle && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
-          <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
-            {/* Modal Close Button */}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
+          <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl space-y-4">
             <button
+              type="button"
               onClick={() => setSelectedArticle(null)}
-              className="absolute right-4 top-4 rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+              className="absolute right-4 top-4 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+              aria-label="Close dialog"
             >
               <X className="h-5 w-5" />
             </button>
 
-            {/* Jurisdiction & Category Header */}
-            <div className="flex flex-wrap items-center gap-2">
-              <span
-                className={`rounded px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider ${
-                  selectedArticle.jurisdiction === 'TN'
-                    ? 'border border-teal-200 bg-teal-50 text-teal-800'
-                    : 'border border-indigo-200 bg-indigo-50 text-indigo-800'
-                }`}
-              >
-                {selectedArticle.jurisdiction === 'TN' ? 'Government of Tamil Nadu' : 'Government of India'}
-              </span>
-              <span className="rounded border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-800 flex items-center gap-1">
-                <ShieldCheck className="h-3.5 w-3.5" />
-                {selectedArticle.verificationStatus}
-              </span>
-            </div>
-
-            {/* Full Title */}
-            <h2 className="mt-3 text-lg font-bold text-slate-900 sm:text-xl">
-              {selectedArticle.title}
-            </h2>
-
-            {/* Date and Department */}
-            <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-500 border-b border-slate-100 pb-3">
-              <span className="flex items-center gap-1">
-                <Calendar className="h-3.5 w-3.5" />
-                {new Date(selectedArticle.publishedAt).toLocaleDateString('en-IN', {
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric',
-                })}
-              </span>
-              {selectedArticle.department && (
-                <span className="flex items-center gap-1">
-                  <Building2 className="h-3.5 w-3.5" />
-                  {selectedArticle.department}
+            <div className="space-y-2 pr-6">
+              <div className="flex items-center gap-2">
+                <span className="rounded bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700 border border-indigo-200">
+                  {CATEGORY_META[selectedArticle.category]?.label || selectedArticle.category}
                 </span>
-              )}
-            </div>
-
-            {/* Article Content */}
-            <div className="mt-4 space-y-3 text-sm leading-relaxed text-slate-700">
-              <p className="font-semibold text-slate-900 bg-slate-50 p-3 rounded-lg border border-slate-200">
-                {selectedArticle.summary}
-              </p>
-              <p className="text-slate-700">
-                {selectedArticle.content}
-              </p>
-            </div>
-
-            {/* Tags */}
-            <div className="mt-5 flex flex-wrap items-center gap-1.5 pt-3 border-t border-slate-100">
-              <Tag className="h-3.5 w-3.5 text-slate-400 mr-1" />
-              {selectedArticle.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="rounded-md border border-slate-200 bg-slate-100/80 px-2 py-0.5 text-[11px] text-slate-600"
-                >
-                  #{tag}
+                <span className="text-xs text-slate-400">
+                  Published: {formatDate(selectedArticle.publishedAt)}
                 </span>
-              ))}
-            </div>
-
-            {/* Source & Actions */}
-            <div className="mt-5 flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
-              <div className="text-xs text-slate-500">
-                <span>Official Source: </span>
-                <strong className="text-slate-800">{selectedArticle.sourceName}</strong>
               </div>
 
-              <div className="flex items-center gap-2">
-                <a
-                  href={selectedArticle.sourceUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 rounded-lg bg-indigo-700 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-indigo-800"
-                >
-                  <span>Official Press Portal</span>
-                  <ExternalLink className="h-3.5 w-3.5" />
-                </a>
+              <h2 className="text-xl font-bold text-slate-900 leading-snug">
+                {lang === 'TA' ? selectedArticle.titleTa : selectedArticle.title}
+              </h2>
+            </div>
+
+            {/* Department & District Attribution */}
+            <div className="grid grid-cols-2 gap-2 rounded-xl bg-slate-50 p-3 text-xs text-slate-600 border border-slate-100">
+              <div>
+                <span className="font-semibold text-slate-900 block">Department:</span>
+                {selectedArticle.department}
+              </div>
+              <div>
+                <span className="font-semibold text-slate-900 block">Jurisdiction / District:</span>
+                {selectedArticle.district ? `${selectedArticle.district} District` : 'Statewide (All 38 Districts)'}
+              </div>
+            </div>
+
+            {/* Summary & Full Content */}
+            <div className="space-y-3 text-sm text-slate-700 leading-relaxed">
+              <div className="rounded-lg border-l-4 border-indigo-600 bg-indigo-50/50 p-3 text-xs text-indigo-950">
+                <strong className="block font-semibold mb-1">Official Summary:</strong>
+                {lang === 'TA' ? selectedArticle.summaryTa : selectedArticle.summary}
+              </div>
+
+              <p className="whitespace-pre-line text-xs sm:text-sm">
+                {lang === 'TA' ? selectedArticle.contentTa : selectedArticle.content}
+              </p>
+            </div>
+
+            {/* Key Facts Checklist */}
+            {selectedArticle.keyFacts && (
+              <div className="space-y-1.5 rounded-lg border border-slate-200 p-3 text-xs">
+                <p className="font-semibold text-slate-900">Extracted Intelligence & Criteria:</p>
+                {selectedArticle.keyFacts.outlay && (
+                  <p><span className="text-slate-500">Financial Outlay:</span> <strong>{selectedArticle.keyFacts.outlay}</strong></p>
+                )}
+                {selectedArticle.keyFacts.beneficiaries && (
+                  <p><span className="text-slate-500">Beneficiary Group:</span> {selectedArticle.keyFacts.beneficiaries}</p>
+                )}
+                {selectedArticle.keyFacts.eligibility && (
+                  <p><span className="text-slate-500">Eligibility Terms:</span> {selectedArticle.keyFacts.eligibility}</p>
+                )}
+              </div>
+            )}
+
+            {/* Official Source Link & G.O. References */}
+            <div className="space-y-2 pt-2 border-t border-slate-100 text-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <span className="text-slate-500">
+                  Source: <strong>{selectedArticle.sourceName}</strong>
+                </span>
+
+                <div className="flex items-center gap-2">
+                  {selectedArticle.officialDocUrl && (
+                    <a
+                      href={selectedArticle.officialDocUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 rounded bg-teal-50 px-2.5 py-1 font-semibold text-teal-800 border border-teal-200 hover:bg-teal-100"
+                    >
+                      <FileCheck className="h-3 w-3" />
+                      View Official G.O. (PDF)
+                    </a>
+                  )}
+
+                  <a
+                    href={selectedArticle.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 rounded bg-indigo-600 px-3 py-1 font-semibold text-white hover:bg-indigo-700"
+                  >
+                    Original Portal
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
               </div>
             </div>
           </div>
@@ -340,4 +451,3 @@ export default function NewsPortal() {
     </div>
   )
 }
-

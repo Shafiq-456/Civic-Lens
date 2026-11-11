@@ -1,15 +1,16 @@
 'use client'
 
-import { Landmark, Scale, Building2, ShieldCheck, MapPin, Sparkles, Newspaper } from 'lucide-react'
+import { Landmark, Scale, Building2, ShieldCheck, MapPin, Sparkles, Newspaper, FileText } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
-export type PortalId = 'info' | 'accountability' | 'updates' | 'admin' | 'trust' | 'news'
+export type PortalId = 'info' | 'accountability' | 'updates' | 'orders' | 'admin' | 'trust' | 'news'
 
 export const PORTALS: Array<{ id: PortalId; label: string; short: string; icon: LucideIcon; blurb: string }> = [
   { id: 'info', label: 'Government Information Portal', short: 'Information', icon: Landmark, blurb: 'Maps, political leadership, announcements, calendar, schemes & departments' },
   { id: 'accountability', label: 'Public Accountability Portal', short: 'Accountability', icon: Scale, blurb: 'Complaints, projects, citizen verification, project history & financial transparency' },
   { id: 'updates', label: 'Government Scheme Updates', short: 'Updates', icon: Sparkles, blurb: 'Recent revisions, newly launched welfare schemes, eligibility changes & official orders' },
-  { id: 'admin', label: 'Government Administration Portal', short: 'Administration', icon: Building2, blurb: 'Department workflows, representative monitoring, authorised data management & audit trails' },
+  { id: 'orders', label: 'Tamil Nadu Government Orders (G.O.)', short: 'G.O. Tracker', icon: FileText, blurb: 'Authentic Government Orders (Ms/Rt), financial sanctions & original PDF documents' },
+  { id: 'admin', label: 'Government Administration Portal', short: 'Administration', icon: Building2, blurb: 'Department workflows, representative monitoring, collector management & audit trails' },
   { id: 'trust', label: 'Trust, Data Governance & Deployment', short: 'Trust & Docs', icon: ShieldCheck, blurb: 'Data governance, security assessment plan, and phased deployment roadmap' },
   { id: 'news', label: 'Government News & Briefings', short: 'NEWS', icon: Newspaper, blurb: 'Verified news, gazettes, and official press releases from Government of India & Tamil Nadu' },
 ]

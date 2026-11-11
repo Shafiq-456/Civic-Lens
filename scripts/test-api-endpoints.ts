@@ -100,7 +100,7 @@ const tests: ApiTest[] = [
     route: '/api/news',
     expectedStatus: 200,
     description: 'Government news feed with jurisdiction and categories',
-    validator: (d) => Array.isArray(d.news) && d.news.length === 8,
+    validator: (d) => Array.isArray(d.news) && d.news.length >= 8,
   },
   {
     id: 'API-13',

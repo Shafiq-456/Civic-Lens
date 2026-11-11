@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 /** Tab identifiers for the administration portal shell. */
-export type AdminTab = 'dashboard' | 'complaints' | 'records' | 'citizen' | 'monitoring' | 'audit'
+export type AdminTab = 'dashboard' | 'complaints' | 'records' | 'citizen' | 'monitoring' | 'audit' | 'intelligence'
 
 /** Chip tone per administration role. */
 export const ROLE_TONE: Record<string, string> = {

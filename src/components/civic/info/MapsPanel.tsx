@@ -597,19 +597,37 @@ function StateSidePanel({
 }
 
 /* ------------------------------------------------------------------ */
-/* District detail (TN mode)                                           */
+/* District detail & Real-Time Intelligence (TN mode)                  */
 /* ------------------------------------------------------------------ */
 
+interface DistrictIntelligenceResponse {
+  district: DistrictSummary
+  news: Array<{ id: string; title: string; summary: string; publishedAt: string; sourceName: string; sourceUrl: string }>
+  governmentOrders: Array<{ id: string; goNumber: string; title: string; pdfUrl: string; issuedDate: string }>
+  projects: Array<{ id: string; code: string; name: string; budgetInrCr: number; progress: number; status: string }>
+  schemes: Array<{ id: string; name: string; description: string; eligibility: string | null; applicationUrl: string | null }>
+  verifiedSourceCount: number
+}
+
 function DistrictDetail({ district }: { district: DistrictSummary }) {
+  const [activeTab, setActiveTab] = useState<'records' | 'news' | 'gos' | 'projects'>('records')
   const { data, loading, error } = useApi<RecordsResponse>(`/api/records?districtId=${encodeURIComponent(district.id)}`)
+  const { data: intel, loading: intelLoading } = useApi<DistrictIntelligenceResponse>(`/api/districts/intelligence?name=${encodeURIComponent(district.name)}`)
 
   return (
     <div>
-      <h4 className="text-base font-semibold text-slate-900">{district.name}</h4>
-      <p className="text-xs text-slate-500">
-        {district.headquarters ? `Headquarters: ${district.headquarters}` : 'Headquarters not recorded'}
-        {district.formedOn ? ` · formed ${formatDate(district.formedOn)}` : ''}
-      </p>
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <h4 className="text-base font-semibold text-slate-900">{district.name}</h4>
+          <p className="text-xs text-slate-500">
+            {district.headquarters ? `Headquarters: ${district.headquarters}` : 'Headquarters not recorded'}
+            {district.formedOn ? ` · formed ${formatDate(district.formedOn)}` : ''}
+          </p>
+        </div>
+        <span className="rounded bg-teal-50 px-2 py-0.5 text-[10px] font-bold text-teal-800 border border-teal-200">
+          38 TN Districts
+        </span>
+      </div>
 
       <div className="mt-3 grid grid-cols-3 gap-2">
         <MiniStat label="Records" value={district._count.records} />
@@ -617,28 +635,144 @@ function DistrictDetail({ district }: { district: DistrictSummary }) {
         <MiniStat label="Complaints" value={district._count.complaints} />
       </div>
 
-      <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-400">Political records</p>
-      {loading ? (
-        <Loading label="Loading district records…" />
-      ) : error ? (
-        <ErrorState message={error} />
-      ) : (data?.records.length ?? 0) === 0 ? (
-        <EmptyState title="No records mapped" hint="No political records are linked to this district yet." />
-      ) : (
-        <ul className={`mt-2 max-h-96 space-y-2 overflow-y-auto pr-1 ${SCROLLBAR}`}>
-          {data!.records.map((r) => (
-            <li key={r.id} className="flex items-start justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50/70 px-3 py-2">
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-slate-800">{r.name}</p>
-                <p className="text-xs text-slate-500">
-                  {OFFICE_META[r.office]?.label ?? r.officeLabel ?? r.office}
-                  {r.constituencyName ? ` · ${r.constituencyName}` : ''}
-                </p>
-              </div>
-              <VerificationBadge status={r.status} />
-            </li>
-          ))}
-        </ul>
+      {/* Sub-tab selection for District Intelligence */}
+      <div className="mt-4 flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1 text-[11px] font-semibold">
+        <button
+          type="button"
+          onClick={() => setActiveTab('records')}
+          className={`flex-1 rounded py-1 transition ${activeTab === 'records' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
+        >
+          Leadership ({data?.records.length ?? 0})
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('news')}
+          className={`flex-1 rounded py-1 transition ${activeTab === 'news' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
+        >
+          News ({intel?.news?.length ?? 0})
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('gos')}
+          className={`flex-1 rounded py-1 transition ${activeTab === 'gos' ? 'bg-white text-teal-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
+        >
+          G.O.s ({intel?.governmentOrders?.length ?? 0})
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('projects')}
+          className={`flex-1 rounded py-1 transition ${activeTab === 'projects' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
+        >
+          Projects ({intel?.projects?.length ?? 0})
+        </button>
+      </div>
+
+      {activeTab === 'records' && (
+        <div className="mt-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Political records</p>
+          {loading ? (
+            <Loading label="Loading district records…" />
+          ) : error ? (
+            <ErrorState message={error} />
+          ) : (data?.records.length ?? 0) === 0 ? (
+            <EmptyState title="No records mapped" hint="No political records are linked to this district yet." />
+          ) : (
+            <ul className={`mt-2 max-h-80 space-y-2 overflow-y-auto pr-1 ${SCROLLBAR}`}>
+              {data!.records.map((r) => (
+                <li key={r.id} className="flex items-start justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50/70 px-3 py-2">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-slate-800">{r.name}</p>
+                    <p className="text-xs text-slate-500">
+                      {OFFICE_META[r.office]?.label ?? r.officeLabel ?? r.office}
+                      {r.constituencyName ? ` · ${r.constituencyName}` : ''}
+                    </p>
+                  </div>
+                  <VerificationBadge status={r.status} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'news' && (
+        <div className="mt-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">District Intelligence & Press Releases</p>
+          {intelLoading ? (
+            <Loading label="Loading district news…" />
+          ) : (intel?.news?.length ?? 0) === 0 ? (
+            <EmptyState title="No district-specific releases" hint="Monitoring district collectorate feed for breaking updates." />
+          ) : (
+            <ul className={`mt-2 max-h-80 space-y-2 overflow-y-auto pr-1 ${SCROLLBAR}`}>
+              {intel!.news.map((item) => (
+                <li key={item.id} className="rounded-lg border border-slate-100 bg-slate-50/70 p-3 text-xs space-y-1">
+                  <p className="font-semibold text-slate-900 leading-snug">{item.title}</p>
+                  <p className="text-slate-600 line-clamp-2">{item.summary}</p>
+                  <div className="flex items-center justify-between pt-1 text-[11px] text-slate-400">
+                    <span>{item.sourceName}</span>
+                    <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-indigo-600 font-semibold hover:underline">
+                      Source link →
+                    </a>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'gos' && (
+        <div className="mt-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Government Orders Applicable to {district.name}</p>
+          {intelLoading ? (
+            <Loading label="Loading Government Orders…" />
+          ) : (intel?.governmentOrders?.length ?? 0) === 0 ? (
+            <EmptyState title="No orders archived" hint="Checking secretariat gazette for local notifications." />
+          ) : (
+            <ul className={`mt-2 max-h-80 space-y-2 overflow-y-auto pr-1 ${SCROLLBAR}`}>
+              {intel!.governmentOrders.map((go) => (
+                <li key={go.id} className="rounded-lg border border-slate-100 bg-slate-50/70 p-2.5 text-xs space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-teal-800">{go.goNumber}</span>
+                    <span className="text-[10px] text-slate-400">{formatDate(go.issuedDate)}</span>
+                  </div>
+                  <p className="font-medium text-slate-800 line-clamp-2 leading-snug">{go.title}</p>
+                  <div className="pt-1">
+                    <a href={go.pdfUrl} target="_blank" rel="noopener noreferrer" className="text-teal-700 font-semibold hover:underline text-[11px]">
+                      Download Official G.O. (PDF) →
+                    </a>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'projects' && (
+        <div className="mt-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Infrastructure & Welfare Projects</p>
+          {intelLoading ? (
+            <Loading label="Loading projects…" />
+          ) : (intel?.projects?.length ?? 0) === 0 ? (
+            <EmptyState title="No active major projects" hint="Checking development project registry." />
+          ) : (
+            <ul className={`mt-2 max-h-80 space-y-2 overflow-y-auto pr-1 ${SCROLLBAR}`}>
+              {intel!.projects.map((proj) => (
+                <li key={proj.id} className="rounded-lg border border-slate-100 bg-slate-50/70 p-2.5 text-xs space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-800">{proj.code}</span>
+                    <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">
+                      {proj.status} ({proj.progress}%)
+                    </span>
+                  </div>
+                  <p className="text-slate-700 line-clamp-2">{proj.name}</p>
+                  <p className="text-[11px] text-slate-500 font-medium">Budget: ₹{proj.budgetInrCr} Cr</p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       )}
     </div>
   )

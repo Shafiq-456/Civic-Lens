@@ -6,6 +6,7 @@ import Footer from '@/components/civic/Footer'
 import InfoPortal from '@/components/civic/info/InfoPortal'
 import AccountabilityPortal from '@/components/civic/accountability/AccountabilityPortal'
 import UpdatesPortal from '@/components/civic/updates/UpdatesPortal'
+import GovernmentOrdersTracker from '@/components/civic/news/GovernmentOrdersTracker'
 import AdminPortal from '@/components/civic/admin/AdminPortal'
 import TrustPortal from '@/components/civic/trust/TrustPortal'
 import NewsPortal from '@/components/civic/news/NewsPortal'
@@ -55,6 +56,8 @@ export default function Home() {
           <AccountabilityPortal />
         ) : portal === 'updates' ? (
           <UpdatesPortal />
+        ) : portal === 'orders' ? (
+          <GovernmentOrdersTracker />
         ) : portal === 'admin' ? (
           <AdminPortal />
         ) : portal === 'trust' ? (
