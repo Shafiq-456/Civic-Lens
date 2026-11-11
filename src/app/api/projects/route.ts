@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
         ...(category ? { category } : {}),
         ...(districtId ? { districtId } : {}),
         ...(departmentId ? { departmentId } : {}),
-        ...(q ? { OR: [{ name: { contains: q } }, { code: { contains: q } }, { description: { contains: q } }] } : {}),
+        ...(q ? { OR: [{ name: { contains: q, mode: 'insensitive' } }, { code: { contains: q, mode: 'insensitive' } }, { description: { contains: q, mode: 'insensitive' } }] } : {}),
       },
       include: {
         department: { select: { name: true, shortName: true } },
